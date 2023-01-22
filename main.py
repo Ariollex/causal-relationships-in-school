@@ -3,14 +3,16 @@ import numpy
 import input_data
 import calculations
 import print_data
-import charts
+import graphs
 from strings import print_on_language, set_language
 
 # Disable warnings
 pandas.options.mode.chained_assignment = None
 
 # Version
-version = '0.1'
+version = '0.1.1'
+prefix = 'alpha'
+version = 'v' + version + '-' + prefix
 
 # Language
 language = open("current_language", 'r').read()
@@ -32,9 +34,8 @@ sex = data[1]
 parallel = data[2]
 letter = data[3]
 causes = data[4]
-info_about_causes = data[5]
-time_causes = data[6]
-previous_causes = data[7]
+time_causes = data[5]
+previous_causes = data[6]
 
 # Convert time
 for i in range(data.shape[0]):
@@ -43,11 +44,8 @@ for i in range(data.shape[0]):
     else:
         time_causes[i] = int(time_causes[i])
 
-# List with output data
-info = []
-
 # Available graphs
-graphs = [print_on_language(1, 5), print_on_language(1, 18), print_on_language(1, 19)]
+available_graphs = [print_on_language(1, 5), print_on_language(1, 18), print_on_language(1, 19)]
 
 # Program operation mode selection
 functions = [print_on_language(1, 8), print_on_language(1, 9)]
@@ -58,16 +56,17 @@ print('E)', print_on_language(1, 21))
 print(print_on_language(1, 7) + ':', end=' ')
 choice_mode = input_data.make_user_choice(functions)
 # Creating a list of incidents
-list_incidents = calculations.make_list_incidents(data, name, sex, parallel, letter, causes, info_about_causes,
+list_incidents = calculations.make_list_incidents(data, name, sex, parallel, letter, causes,
                                                   time_causes, previous_causes)
 
 if choice_mode == 0:
+    info = []
+
     print_data.print_list_incidents(list_incidents)
     # Incident selection
     user_selection = input_data.make_user_choice(list_incidents)
 
-    print(print_on_language(1, 2), ' ', user_selection + 1,
-          '. ' + print_on_language(2, 2) + ': '
+    print(print_on_language(1, 2), ' ', user_selection + 1, '. ' + print_on_language(2, 2) + ': '
           if list_incidents[user_selection][1] == print_on_language(1, 4) or print_on_language(3, 2) == 0
           else '. ' + print_on_language(3, 2) + ': ', list_incidents[user_selection][0], sep='')
 
@@ -80,13 +79,13 @@ if choice_mode == 0:
 
 elif choice_mode == 1:
     print(print_on_language(1, 10) + ':')
-    print_data.print_selection_list(graphs)
+    print_data.print_selection_list(available_graphs)
     print(print_on_language(1, 11) + ':', end=' ')
     # Graph selection
-    choice_graph = input_data.make_user_choice(graphs)
+    choice_graph = input_data.make_user_choice(available_graphs)
     if choice_graph == 0:
-        charts.graph_1(data, causes, list_incidents)
+        graphs.graph_1(data, causes, list_incidents)
     elif choice_graph == 1:
-        charts.graph_2(data, list_incidents, parallel)
+        graphs.graph_2(data, list_incidents, parallel)
     elif choice_graph == 2:
-        charts.graph_3(data, name_columns)
+        graphs.graph_3(data, name_columns)

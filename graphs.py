@@ -30,5 +30,5 @@ def graph_3(data, name_columns):
                 linewidths=0.1, annot=True)
     plt.legend([], loc='upper right',
                title='2 - ' + str(name_columns[2]) + '\n4 - ' + str(name_columns[4]) +
-                     '\n6 - ' + str(name_columns[6]) + '\n7 - ' + str(name_columns[7]))
+                     '\n6 - ' + str(name_columns[5]) + '\n7 - ' + str(name_columns[6]))
     plt.show()

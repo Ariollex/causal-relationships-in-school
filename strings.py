@@ -26,9 +26,7 @@ def change_language():
         print(i + 1, ') ', files[i].replace('strings_', '').replace('.xlsx', ''), sep='')
     print('Please note that if the dataset and the program language are different, there may be errors.')
     print('Enter the number: ', end='')
-    language = -1
-    while language == -1 or language == -2:
-        language = input_data.make_user_choice(files)
+    language = input_data.make_user_choice(files)
     language = files[language].replace('strings_', '').replace('.xlsx', '')
     set_language(language)
     exit(print_on_language(1, 14))
