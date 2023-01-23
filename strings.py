@@ -2,21 +2,41 @@ import os
 import numpy
 import pandas
 import input_data
+import error
 
-language_texts = []
+configuration, indexes, language_texts = [], [], []
+
+
+def set_variables(configuration_file, indexes_in_conf_file):
+    global configuration, indexes
+    configuration = configuration_file
+    indexes = indexes_in_conf_file
 
 
 def set_language(language):
     global language_texts
-    if language != open("current_language", 'r').read():
-        lines = open("current_language", 'r').readlines()
-        lines[0] = language
-        out = open("current_language", 'w')
+    if language != configuration[indexes[2]][
+                   str(configuration[indexes[2]]).find("'") + 1:str(configuration[indexes[2]]).rfind("'")]:
+        lines = open("configuration", 'r').readlines()
+        lines[2] = "language = '" + language + "'"
+        out = open("configuration", 'w')
         out.writelines(lines)
         out.close()
-    language_texts = pandas.read_excel('languages/strings_' + language + '.xlsx')
-    language_texts.replace(numpy.nan, 0, inplace=True)
-    language_texts.columns = range(language_texts.columns.size)
+    if os.path.exists('languages/strings_' + language + '.xlsx'):
+        language_texts = pandas.read_excel('languages/strings_' + language + '.xlsx')
+        language_texts.replace(numpy.nan, 0, inplace=True)
+        language_texts.columns = range(language_texts.columns.size)
+    else:
+        error.error(language + ' language is not supported. \n'
+                               'Make sure that you downloaded the program from '
+                               'https://github.com/Ariollex/causal-relationships-in-school/releases '
+                               'and did not make any changes to the code. \n', 0)
+        print('Supported languages:')
+        files = os.listdir('languages')
+        for i in range(len(files)):
+            print(files[i].replace('strings_', '').replace('.xlsx', ''), sep='')
+        print('\033[91mConfigure this in "configuration" or reinstall the program.\033[0m')
+        exit('Broken configuration!')
 
 
 def change_language():

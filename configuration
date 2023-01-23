@@ -1,0 +1,19 @@
+# Version
+version = '0.1.2'
+prefix = 'alpha'
+
+# Language
+language = 'ru-RU'
+
+# Dataset settings
+# Path to dataset
+dataset_path = 'Dataset/Cause-effect-pairs-in-school.xlsx'
+# Dataset columns (column_name = column_number)
+# Numbering starts from 1. Example: name = '1'
+name = '1'
+sex = '2'
+parallel = '3'
+letter = '4'
+causes = '5'
+time_causes = '6'
+previous_causes = '7'

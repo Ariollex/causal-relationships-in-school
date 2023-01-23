@@ -34,7 +34,7 @@ def is_incident_in_classroom(participants, student_class, suspicious, maximum, s
     result = result + print_on_language(1, 26).lower() + ' ' + print_on_language(2, 23) + ' ' + student_class
     if suspicious != 0:
         result = result + '\n' + print_on_language(1, 24) + ' ' + maximum[0] + ' ' + \
-            print_on_language(2, 24) + ' ' + str(maximum[1]) + ' ' + print_on_language(3, 24)
+                 print_on_language(2, 24) + ' ' + str(maximum[1]) + ' ' + print_on_language(3, 24)
     result = result + '\n' + print_on_language(1, 27) + ' ' + str(len(participants) + 1) + ' ' + \
         print_on_language(2, 27) + ':' + '\n' + student_name + '\n' + '\n'.join(participants)
     return result

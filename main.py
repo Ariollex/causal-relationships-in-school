@@ -4,38 +4,43 @@ import input_data
 import calculations
 import print_data
 import graphs
-from strings import print_on_language, set_language
+from strings import print_on_language, set_language, set_variables
 
 # Disable warnings
 pandas.options.mode.chained_assignment = None
 
+# Configuration
+configuration = open("configuration", 'r').read().split('\n')
+calculations.set_variables(configuration)
+indexes = calculations.check_configuration()
+set_variables(configuration, indexes)
+calculations.check_parameters()
+
 # Version
-version = '0.1.1'
-prefix = 'alpha'
+version = calculations.read_from_configuration(0)
+prefix = calculations.read_from_configuration(1)
 version = 'v' + version + '-' + prefix
 
 # Language
-language = open("current_language", 'r').read()
+language = calculations.read_from_configuration(2)
 set_language(language)
-print(print_on_language(1, 15), version)
-print('If you want to close the program, press "E"', end='\n\n')
-print('Current language: ', language, '. If you want to change the language, enter L at any time.', sep='', end='\n\n')
+print(print_on_language(1, 15), version, '\n')
 
 # Dataset
-file_loc = 'Dataset/Cause-effect-pairs-in-school.xlsx'
+file_loc = calculations.read_from_configuration(10)
 data = pandas.read_excel(file_loc)
 name_columns = list(data)
 data.columns = range(data.columns.size)
 data.replace(numpy.nan, 0, inplace=True)
 
 # Dataset settings
-name = data[0]
-sex = data[1]
-parallel = data[2]
-letter = data[3]
-causes = data[4]
-time_causes = data[5]
-previous_causes = data[6]
+name = data[int(calculations.read_from_configuration(3)) - 1]
+sex = data[int(calculations.read_from_configuration(4)) - 1]
+parallel = data[int(calculations.read_from_configuration(5)) - 1]
+letter = data[int(calculations.read_from_configuration(6)) - 1]
+causes = data[int(calculations.read_from_configuration(7)) - 1]
+time_causes = data[int(calculations.read_from_configuration(8)) - 1]
+previous_causes = data[int(calculations.read_from_configuration(9)) - 1]
 
 # Convert time
 for i in range(data.shape[0]):
@@ -66,9 +71,12 @@ if choice_mode == 0:
     # Incident selection
     user_selection = input_data.make_user_choice(list_incidents)
 
-    print(print_on_language(1, 2), ' ', user_selection + 1, '. ' + print_on_language(2, 2) + ': '
-          if list_incidents[user_selection][1] == print_on_language(1, 4) or print_on_language(3, 2) == 0
-          else '. ' + print_on_language(3, 2) + ': ', list_incidents[user_selection][0], sep='')
+    if list_incidents[user_selection][1] == print_on_language(1, 4) or (print_on_language(3, 2) == 0):
+        print(print_on_language(1, 2), ' ', user_selection + 1, '. ' + print_on_language(2, 2) + ': ',
+              list_incidents[user_selection][0], sep='')
+    else:
+        print(print_on_language(1, 2), ' ', user_selection + 1, '. ' + print_on_language(3, 2) + ': ',
+              list_incidents[user_selection][0], sep='')
 
     # Calculations: search for matching information
     calculations.intersection_of_classes(list_incidents, user_selection, info, 0)
