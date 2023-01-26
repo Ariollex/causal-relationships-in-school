@@ -237,7 +237,7 @@ def settings_dataset(buttons=True):
             Label(window, text=parameters_dataset[i]).grid(column=0, row=count_row, sticky=W)
         value_entry = Entry(window, textvariable=v)
         entries.append(value_entry)
-        value_entry.grid(column=0, row=count_row)
+        value_entry.grid(column=1, row=count_row)
         count_row = count_row + 1
     if not buttons:
         Label(window, text='Current dataset: ' + file_loc).grid(column=0, row=count_row + 1)
@@ -360,7 +360,7 @@ def start_variables():
                                      print_on_language(1, 38), print_on_language(1, 12), print_on_language(1, 39),
                                      print_on_language(1, 40)]
 
-    root.title(print_on_language(1, 15) + ' ' + version)
+    root.title(print_on_language(1, 15) + ', ' + version)
     mode_selection()
 
 
@@ -376,14 +376,14 @@ def fix_configuration():
 
 
 root = Tk()
-root.minsize(400, 150)
+root.minsize(500, 150)
 window = Frame(root)
 window.pack(expand=True)
 button_frame = Frame(root)
 button_frame.pack()
 
 if len(delayed_start) != 0:
-    root.title('Causal relationships in school ' + version)
+    root.title('Causal relationships in school, ' + version)
     fix_configuration()
 else:
     start_variables()

@@ -12,6 +12,7 @@ def set_variables(example_list_incidents, example_causes, example_parallel, exam
 
 
 def graph_selection(choice_graph, data):
+    plt.close('all')
     if choice_graph == 0:
         graph_number_of_incidents_to_students(data)
     elif choice_graph == 1:
