@@ -6,3 +6,7 @@ def error(message, exit_message):
 
 def warning(message):
     print('\033[93mWarning! \033[0m' + message)
+
+
+def broken_configuration():
+    exit('Configuration file is broken! Exit...')

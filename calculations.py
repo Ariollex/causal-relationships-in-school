@@ -1,9 +1,16 @@
 import print_data
-import error
 import numpy
 import os
 
-configuration, indexes, supported_parameters = [], [], []
+configuration, indexes, supported_parameters, parameters_dataset = [], [], [], []
+
+
+def get_supported_parameters():
+    return supported_parameters
+
+
+def get_parameters_dataset():
+    return parameters_dataset
 
 
 def set_variables(configuration_file):
@@ -17,55 +24,61 @@ def read_from_configuration(n):
 
 
 def check_parameters():
-    parameters_integers = ['name', 'sex', 'parallel', 'letter', 'causes', 'time_causes', 'previous_causes']
+    global parameters_dataset
+    parameters_dataset = ['name', 'sex', 'parallel', 'letter', 'causes', 'time_causes', 'previous_causes']
     parameters_strings = ['prefix', 'language', 'version']
     parameters_path = ['dataset_path']
+    errors = []
     for i in range(len(supported_parameters)):
         example_parameter_name = supported_parameters[i]
         example_parameter_value = read_from_configuration(i)
-        if example_parameter_name in parameters_integers and example_parameter_value.isdigit() is False:
-            error.error('Parameter ' + example_parameter_name + ' has an incorrect value! It should be integer.',
-                        'Broken configuration!')
+        if example_parameter_name in parameters_dataset and (not example_parameter_value.isdigit() or
+                                                             not (0 < int(example_parameter_value) <
+                                                                  len(parameters_dataset) + 1)):
+            errors.append('Parameter "' + example_parameter_name + '" has an incorrect value! It should be integer.')
         if example_parameter_name in parameters_strings and isinstance(example_parameter_value, str) is False:
-            error.error('Parameter ' + example_parameter_name + ' has an incorrect value! It should be string.',
-                        'Broken configuration!')
+            errors.append('Parameter "' + example_parameter_name + '" has an incorrect value! It should be string.')
         if example_parameter_name in parameters_path and not os.path.exists(example_parameter_value):
-            error.error('Parameter ' + example_parameter_name + ' has an incorrect path.',
-                        'Broken configuration!')
+            errors.append('Parameter "' + example_parameter_name + '" has an incorrect path.')
+    return errors
 
 
-def check_configuration():
+def check_configuration(only_dataset=False, only_indexes=False):
     global indexes, supported_parameters
     supported_parameters = ['version', 'prefix', 'language', 'name', 'sex', 'parallel', 'letter', 'causes',
                             'time_causes', 'previous_causes', 'dataset_path']
     indexes = [numpy.nan] * len(supported_parameters)
+    warnings = []
+    missing_parameters = []
     for i in range(len(configuration)):
         parameter_name = configuration[i][:configuration[i].find(' ')]
         if configuration[i] == '' or configuration[i][0] == '#':
             continue
         elif parameter_name not in supported_parameters:
-            error.warning('Unknown parameter ' + '"' + parameter_name + '"' + ' in the configuration file. '
-                          'This can cause problems!')
+            warnings.append('Unknown parameter ' + '"' + parameter_name + '"' + ' in the configuration file. '
+                                                                                'This can cause problems!')
         elif not numpy.isnan(indexes[supported_parameters.index(parameter_name)]):
-            error.warning('Duplicate parameter ' + '"' + parameter_name + '"' + ' in the configuration file. '
-                          'This can cause problems!')
+            warnings.append('Duplicate parameter ' + '"' + parameter_name + '"' + ' in the configuration file. '
+                                                                                  'This can cause problems!')
         else:
             indexes[supported_parameters.index(parameter_name)] = i
     if numpy.nan in indexes:
-        error.error('These required parameters are not defined:', 0)
+        missing_parameters = []
         for i in range(len(indexes)):
             if numpy.isnan(indexes[i]):
-                print(supported_parameters[i])
-        exit('Configuration file is broken! Exit...')
-    else:
+                missing_parameters.append(supported_parameters[i])
+    if only_dataset:
+        return missing_parameters
+    if only_indexes:
         return indexes
+    return indexes, warnings, missing_parameters
 
 
 def make_list_incidents(data, name, sex, parallel, letter, causes, time_causes, previous_causes):
     example_list_incidents = []
     for i in range(0, data.shape[0]):
         if causes[i] != 0:
-            school_class = str(parallel[i]) + ' "' + letter[i] + '"'
+            school_class = str(parallel[i]) + ' "' + str(letter[i]) + '"'
             example_list_incidents.append(
                 [name[i], sex[i], school_class, time_causes[i], previous_causes[i]])
     return example_list_incidents
