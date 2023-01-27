@@ -1,9 +1,11 @@
+from sys import exit
 import pandas
 import numpy
 from tkinter import *
 from tkinter import messagebox
 from tkinter.filedialog import askopenfilename
 import webbrowser
+import requests
 import os
 
 import error
@@ -20,7 +22,14 @@ delayed_start = []
 modes, available_graphs, list_incidents, parameters_dataset, parameters_dataset_translated = [], [], [], [], []
 
 # Configuration
-configuration = open("configuration", 'r').read().split('\n')
+if not os.path.exists('configuration'):
+    url_configuration = 'https://raw.githubusercontent.com/Ariollex/causal-relationships-in-school/main/configuration'
+    messagebox.showwarning('Warning!', 'The configuration file was not found. Downloading from ' + url_configuration)
+    response = requests.get(url_configuration)
+    with open('configuration', "wb") as file:
+        file.write(response.content)
+
+configuration = open('configuration', 'r').read().split('\n')
 calculations.set_variables(configuration)
 indexes, warnings, missing_parameters = calculations.check_configuration()
 if len(warnings) != 0:
@@ -41,12 +50,22 @@ prefix = calculations.read_from_configuration(1)
 version = 'v' + version + '-' + prefix
 
 # Language
+if not os.path.exists('languages') or not os.listdir('languages'):
+    messagebox.showerror('Error', 'Missing language files')
+    exit()
+
 language = calculations.read_from_configuration(2)
 if not set_language(language):
     delayed_start.insert(0, 'invalid_language')
+    language_status = 'undefined'
+else:
+    language_status = 'active'
 
 # Dataset
 file_loc = calculations.read_from_configuration(10)
+if not os.path.exists(file_loc):
+    delayed_start.append('invalid_path_dataset')
+    file_loc = None
 
 
 def set_dataset_parameters(file_location):
@@ -57,10 +76,13 @@ def set_dataset_parameters(file_location):
     return dataset, dataset_name_columns
 
 
-data, name_columns = set_dataset_parameters(file_loc)
+if 'invalid_path_dataset' not in delayed_start:
+    data, name_columns = set_dataset_parameters(file_loc)
+else:
+    data = None
 
 # Dataset settings
-if not ('invalid_parameters_values' in delayed_start):
+if 'invalid_parameters_values' not in delayed_start and data is not None:
     name = data[int(calculations.read_from_configuration(3)) - 1]
     sex = data[int(calculations.read_from_configuration(4)) - 1]
     parallel = data[int(calculations.read_from_configuration(5)) - 1]
@@ -82,11 +104,11 @@ def back_button(column_btn, count_row, translated=True, back_command=lambda: mod
     exit_btn.grid(column=column_btn, row=count_row, padx=5, pady=5)
 
 
-def exit_button(column_btn, count_row, translated=True):
+def exit_button(column_btn, count_row, translated=True, exit_command=lambda: exit()):
     if not translated:
-        exit_btn = Button(button_frame, text='Exit', command=exit)
+        exit_btn = Button(button_frame, text='Exit', command=exit_command)
     else:
-        exit_btn = Button(button_frame, text=print_on_language(1, 21), command=exit)
+        exit_btn = Button(button_frame, text=print_on_language(1, 21), command=exit_command)
     exit_btn.grid(column=column_btn, row=count_row, padx=5, pady=5)
 
 
@@ -112,7 +134,7 @@ def change_language(back_btn=None, delayed_start_var=False):
     column_btn = 0
     translated = False
     if back_btn:
-        back_button(column_btn, count_row + 2)
+        back_button(column_btn, count_row + 2, back_command=lambda: settings())
         column_btn = column_btn + 1
         translated = True
     exit_button(column_btn, count_row + 2, translated)
@@ -128,31 +150,28 @@ def clear_window(message=None):
 
 
 def change_language_process(files, index_language, delayed_start_var=False):
+    global language_status, delayed_start
     new_language = files[index_language].replace('strings_', '').replace('.xlsx', '')
     set_language(new_language)
+    language_status = 'active'
     if delayed_start_var:
-        fix_configuration()
-    else:
-        start_variables()
-        mode_selection()
+        delayed_start.remove('invalid_language')
+    start_variables()
 
 
-def exit_screen(message=None):
-    if message is not None:
-        clear_window(message)
-    exit_button(0, 1)
-
-
-def apply_dataset(changes, delayed_start_var=False):
+def apply_dataset(changes, delayed_start_var=False, apply_exit=None):
+    if file_loc is None:
+        messagebox.showerror(print_on_language(1, 41), print_on_language(1, 55))
+        return
     supported_parameters = calculations.get_supported_parameters()
     for i in range(len(parameters_dataset)):
         if not changes[i].get().isdigit() or not 0 < int(changes[i].get()) < len(parameters_dataset) + 1:
-            messagebox.showerror("Error", "Incorrect column values")
+            messagebox.showerror(print_on_language(1, 41), print_on_language(1, 53))
             return
         else:
             change_configuration(supported_parameters[3 + i], indexes[3 + i], changes[i].get())
     if len(calculations.check_configuration(only_dataset=True)) != 0:
-        messagebox.showerror("Error", "Incorrect column values or incorrect dataset")
+        messagebox.showerror(print_on_language(1, 41), print_on_language(1, 54))
         return
     else:
         global list_incidents, name, sex, parallel, letter, causes, time_causes, previous_causes, configuration
@@ -177,11 +196,13 @@ def apply_dataset(changes, delayed_start_var=False):
         # Re-creating a list of incidents
         list_incidents = calculations.make_list_incidents(data, name, sex, parallel, letter, causes,
                                                           time_causes, previous_causes)
-    if not delayed_start_var:
-        mode_selection()
+    if apply_exit:
+        exit()
+    elif not delayed_start_var:
+        settings()
     else:
         start_variables()
-        messagebox.showinfo(title='Success', message='Successfully applied')
+        messagebox.showinfo(title=print_on_language(1, 51), message=print_on_language(1, 52))
         fix_configuration()
 
 
@@ -195,64 +216,46 @@ def check_dataset(new_file_loc):
     return True
 
 
-def change_dataset(count_row, translated=True):
+def change_dataset(count_row):
     global data, name_columns, file_loc
     new_file_loc = askopenfilename()
     if new_file_loc != '':
         if not check_dataset(new_file_loc):
-            if translated:
-                messagebox.showerror(print_on_language(1, 41), print_on_language(1, 42))
-            else:
-                messagebox.showerror('Error', 'Broken dataset')
+            messagebox.showerror(print_on_language(1, 41), print_on_language(1, 42))
             return
         data, name_columns = set_dataset_parameters(new_file_loc)
         change_configuration('dataset_path', indexes[10], new_file_loc)
         file_loc = new_file_loc
     window.winfo_children()[-2].destroy()
-    if translated:
-        Label(window, text=print_on_language(1, 34) + ': ' + file_loc).grid(column=0, row=count_row + 1)
-        Button(window, text=print_on_language(1, 35), command=lambda: change_dataset(count_row)) \
-            .grid(column=1, row=count_row + 1)
-    else:
-        Label(window, text='Current dataset: ' + file_loc).grid(column=0, row=count_row + 1)
-        Button(window, text='Change', command=lambda: change_dataset(count_row, translated=False))
+    Label(window, text=print_on_language(1, 34) + ': ' + str(file_loc)).grid(column=0, row=count_row + 1)
+    Button(window, text=print_on_language(1, 35), command=lambda: change_dataset(count_row)) \
+        .grid(column=1, row=count_row + 1)
 
 
 def settings_dataset(buttons=True):
     global parameters_dataset
     clear_window()
-    if not buttons:
-        Label(window, text='Column numbers in dataset').grid(column=0, row=0)
-    else:
-        Label(window, text=print_on_language(1, 33)).grid(column=0, row=0)
+    Label(window, text=print_on_language(1, 33)).grid(column=0, row=0)
     count_row = 1
     parameters_dataset = calculations.get_parameters_dataset()
     entries = []
     for i in range(len(parameters_dataset)):
         v = StringVar(root, value=str(configuration[indexes[3 + i]][str(configuration[indexes[3 + i]]).find("'") + 1:
                                                                     str(configuration[indexes[3 + i]]).rfind("'")]))
-        if buttons:
-            Label(window, text=parameters_dataset_translated[i]).grid(column=0, row=count_row, sticky=W)
-        else:
-            Label(window, text=parameters_dataset[i]).grid(column=0, row=count_row, sticky=W)
+        Label(window, text=parameters_dataset_translated[i]).grid(column=0, row=count_row, sticky=W)
         value_entry = Entry(window, textvariable=v)
         entries.append(value_entry)
         value_entry.grid(column=1, row=count_row)
         count_row = count_row + 1
+    Label(window, text=print_on_language(1, 34) + ': ' + str(file_loc)).grid(column=0, row=count_row + 1)
+    Button(window, text=print_on_language(1, 35), command=lambda: change_dataset(count_row)) \
+        .grid(column=1, row=count_row + 1)
     if not buttons:
-        Label(window, text='Current dataset: ' + file_loc).grid(column=0, row=count_row + 1)
-        Button(window, text='Change', command=lambda: change_dataset(count_row, translated=False))
-    else:
-        Label(window, text=print_on_language(1, 34) + ': ' + file_loc).grid(column=0, row=count_row + 1)
-        Button(window, text=print_on_language(1, 35), command=lambda: change_dataset(count_row)) \
-            .grid(column=1, row=count_row + 1)
-    if not buttons:
-        Button(window, text='Apply', command=lambda: apply_dataset(entries, delayed_start_var=True)). \
-            grid(column=0, row=count_row + 2)
-        exit_button(1, count_row + 2, False)
+        Button(button_frame, text=print_on_language(1, 50),
+               command=lambda: apply_dataset(entries, delayed_start_var=True)).grid(column=0, row=count_row + 2)
     else:
         back_button(0, count_row + 2, back_command=lambda: apply_dataset(entries))
-        exit_button(1, count_row + 2)
+    exit_button(1, count_row + 2, exit_command=lambda: apply_dataset(entries, apply_exit=True))
 
 
 def settings():
@@ -265,7 +268,7 @@ def settings():
 
 
 def open_source_code():
-    webbrowser.open_new("https://github.com/Ariollex/causal-relationships-in-school")
+    webbrowser.open_new('https://github.com/Ariollex/causal-relationships-in-school')
 
 
 def about_program():
@@ -275,7 +278,7 @@ def about_program():
     Label(window, text=print_on_language(1, 45) + ': ' + 'Artem Agapkin').grid(column=0, row=2)
     Button(window, text=print_on_language(1, 46) + ': ' + 'https://github.com/Ariollex/causal-relationships-in-school',
            command=open_source_code).grid(column=0, row=3)
-    back_button(0, 1)
+    back_button(0, 1, back_command=lambda: settings())
     exit_button(1, 1)
 
 
@@ -319,7 +322,7 @@ def mode_causal_relationship_process(user_selection, info):
 
     # Calculations: conclusions
     Label(window, text=calculations.conclusions(list_incidents, user_selection, info)).grid(column=0, row=1)
-    back_button(0, 2)
+    back_button(0, 2, back_command=lambda: mode_causal_relationship())
     exit_button(1, 2)
 
 
@@ -344,16 +347,12 @@ def mode_graph_process(choice_graph):
 
 
 def start_variables():
-    global modes, available_graphs, list_incidents, parameters_dataset_translated
+    global modes, available_graphs, parameters_dataset_translated, list_incidents
     # Modes
     modes = [print_on_language(1, 8), print_on_language(1, 9)]
 
     # Available graphs
     available_graphs = [print_on_language(1, 5), print_on_language(1, 18), print_on_language(1, 19)]
-
-    # Creating a list of incidents
-    list_incidents = calculations.make_list_incidents(data, name, sex, parallel, letter, causes,
-                                                      time_causes, previous_causes)
 
     # Translated dataset parameters
     parameters_dataset_translated = [print_on_language(1, 36), print_on_language(1, 37), print_on_language(1, 17),
@@ -361,18 +360,46 @@ def start_variables():
                                      print_on_language(1, 40)]
 
     root.title(print_on_language(1, 15) + ', ' + version)
-    mode_selection()
+
+    if configuration_status == 'normal':
+        # Creating a list of incidents
+        list_incidents = calculations.make_list_incidents(data, name, sex, parallel, letter, causes,
+                                                          time_causes, previous_causes)
+        mode_selection()
+    else:
+        fix_configuration()
 
 
 def fix_configuration():
-    if len(delayed_start) == 0:
-        start_variables()
-    elif 'invalid_language' in delayed_start:
+    global list_incidents, language_status, configuration_status
+    # Language
+    if 'invalid_language' in delayed_start:
+        root.update()
+        messagebox.showwarning('Warning', 'The language is not defined. Please select a language.')
         change_language(delayed_start_var=True)
-        delayed_start.remove('invalid_language')
+    elif language_status != 'active':
+        language_status = 'active'
+        start_variables()
+    # Invalid path dataset
+    elif 'invalid_path_dataset' in delayed_start:
+        root.update()
+        messagebox.showwarning(print_on_language(1, 47), print_on_language(1, 48))
+        settings_dataset(buttons=False)
+        delayed_start.remove('invalid_path_dataset')
+        delayed_start.remove('invalid_parameters_values')
+    # Invalid parameters_values
     elif 'invalid_parameters_values' in delayed_start:
+        root.update()
+        messagebox.showwarning(print_on_language(1, 47), print_on_language(1, 49))
         settings_dataset(buttons=False)
         delayed_start.remove('invalid_parameters_values')
+    # check for normal status
+    elif len(delayed_start) == 0:
+        # Creating a list of incidents
+        list_incidents = calculations.make_list_incidents(data, name, sex, parallel, letter, causes,
+                                                          time_causes, previous_causes)
+        configuration_status = 'normal'
+        mode_selection()
 
 
 root = Tk()
@@ -384,7 +411,10 @@ button_frame.pack()
 
 if len(delayed_start) != 0:
     root.title('Causal relationships in school, ' + version)
+    configuration_status = 'break'
+    language_status = 'break'
     fix_configuration()
 else:
+    configuration_status = 'normal'
     start_variables()
 root.mainloop()

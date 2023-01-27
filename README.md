@@ -13,8 +13,9 @@
 При нахождении багов открывать проблему в issues.
 ## Как пользоваться
 Для запуска программы надо установить нужные библиотеки из requirements.txt и запустить main.py
+Если вы на macOS, перед запуском убедитесь, что ваша версия python поддерживает tkinter. (Рекомендую установить python 3.10)
 ```
-python3 -m pip install requests
+pip3 install -r requirements.txt
 python3 main.py
 ```
 Для смены языка нажмите "L", для выхода - "E"
