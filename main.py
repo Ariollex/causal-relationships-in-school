@@ -16,9 +16,12 @@ import charts
 from strings import set_language, set_variables, print_on_language
 
 # Version
-version = '0.2.1'
-prefix = 'alpha'
-version = 'v' + version + '-' + prefix
+version = '0.2.2'
+prefix = ''
+if prefix == '':
+    version = 'v' + version
+else:
+    version = 'v' + version + '-' + prefix
 
 # Disable warnings
 pandas.options.mode.chained_assignment = None
