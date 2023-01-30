@@ -103,7 +103,7 @@ else:
     data = None
 
 
-def set_dataset_parameters():
+def set_dataset_columns():
     global name, sex, parallel, letter, causes, time_causes, previous_causes
     name = data[int(calculations.read_from_configuration(1)) - 1]
     sex = data[int(calculations.read_from_configuration(2)) - 1]
@@ -120,7 +120,7 @@ name, sex, parallel, letter, causes, time_causes, previous_causes = \
 
 # Dataset settings
 if 'invalid_parameters_values' not in delayed_start and data is not None:
-    set_dataset_parameters()
+    set_dataset_columns()
     # Convert time
     for i in range(data.shape[0]):
         time_causes[i] = int(str(time_causes[i]).replace(':', '')) if time_causes[i] != 0 else int(time_causes[i])
@@ -233,7 +233,7 @@ def apply_dataset(changes, delayed_start_var=False, apply_exit=None):
         global list_incidents, name, sex, parallel, letter, causes, time_causes, previous_causes, configuration
         configuration = open("configuration", 'r').read().split('\n')
         calculations.set_variables(configuration)
-        set_dataset_parameters()
+        set_dataset_columns()
         # Convert time
         for i in range(data.shape[0]):
             if str(time_causes[i]).replace(':', '').isdigit():
