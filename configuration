@@ -1,7 +1,3 @@
-# Version
-version = '0.2.1'
-prefix = 'alpha'
-
 # Language
 language = 'ru-RU'
 

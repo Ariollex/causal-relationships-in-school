@@ -40,7 +40,7 @@ def is_incident_in_classroom(participants, student_class, suspicious, maximum, s
 
 
 def is_personal_incident(student_name, student_class):
-    result = print_on_language(1, 28) + ': '
-    result = result + print_on_language(1, 29).lower() + ' ' + student_class + ' ' + \
+    result = print_on_language(1, 28) + ': ' + '\n'
+    result = result + print_on_language(1, 29).lower() + '\n' + student_class + ' ' + \
         print_on_language(2, 29) + ' ' + student_name + '\n' + print_on_language(3, 29)
     return result

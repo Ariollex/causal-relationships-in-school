@@ -26,7 +26,7 @@ def read_from_configuration(n):
 def check_parameters():
     global parameters_dataset
     parameters_dataset = ['name', 'sex', 'parallel', 'letter', 'causes', 'time_causes', 'previous_causes']
-    parameters_strings = ['prefix', 'language', 'version']
+    parameters_strings = ['language']
     parameters_path = ['dataset_path']
     errors = []
     for i in range(len(supported_parameters)):
@@ -45,7 +45,7 @@ def check_parameters():
 
 def check_configuration(only_dataset=False, only_indexes=False):
     global indexes, supported_parameters
-    supported_parameters = ['version', 'prefix', 'language', 'name', 'sex', 'parallel', 'letter', 'causes',
+    supported_parameters = ['language', 'name', 'sex', 'parallel', 'letter', 'causes',
                             'time_causes', 'previous_causes', 'dataset_path']
     indexes = [numpy.nan] * len(supported_parameters)
     warnings = []

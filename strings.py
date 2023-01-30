@@ -13,10 +13,10 @@ def set_variables(configuration_file, indexes_in_conf_file):
 
 def set_language(language):
     global language_texts
-    if language != configuration[indexes[2]][
-                   str(configuration[indexes[2]]).find("'") + 1:str(configuration[indexes[2]]).rfind("'")]:
+    if language != configuration[indexes[0]][
+                   str(configuration[indexes[0]]).find("'") + 1:str(configuration[indexes[0]]).rfind("'")]:
         lines = open("configuration", 'r').readlines()
-        lines[indexes[2]] = "language = '" + language + "'\n"
+        lines[indexes[0]] = "language = '" + language + "'\n"
         out = open("configuration", 'w')
         out.writelines(lines)
         out.close()

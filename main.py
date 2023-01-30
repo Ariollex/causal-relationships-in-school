@@ -6,26 +6,40 @@ from tkinter import messagebox
 from tkinter.filedialog import askopenfilename
 import webbrowser
 import requests
+import zipfile
 import os
 
 import error
 import calculations
 import print_data
-import graphs
+import charts
 from strings import set_language, set_variables, print_on_language
+
+# Version
+version = '0.2.2'
+prefix = ''
+if prefix == '':
+    version = 'v' + version
+else:
+    version = 'v' + version + '-' + prefix
 
 # Disable warnings
 pandas.options.mode.chained_assignment = None
 
 # Delayed start
 delayed_start = []
-modes, available_graphs, list_incidents, parameters_dataset, parameters_dataset_translated = [], [], [], [], []
+modes, available_charts, list_incidents, parameters_dataset, parameters_dataset_translated = [], [], [], [], []
 
 # Configuration
 if not os.path.exists('configuration'):
-    url_configuration = 'https://raw.githubusercontent.com/Ariollex/causal-relationships-in-school/main/configuration'
+    if prefix == '':
+        url_configuration = \
+            'https://raw.githubusercontent.com/Ariollex/causal-relationships-in-school/main/configuration'
+    else:
+        url_configuration = \
+            'https://raw.githubusercontent.com/Ariollex/causal-relationships-in-school/dev/configuration'
     messagebox.showwarning('Warning!', 'The configuration file was not found. Downloading from ' + url_configuration)
-    response = requests.get(url_configuration)
+    response = requests.get(url_configuration, timeout=None)
     with open('configuration', "wb") as file:
         file.write(response.content)
 
@@ -44,25 +58,32 @@ if len(errors) > 0:
     [error.warning(errors[i]) for i in range(len(errors))]
     delayed_start.append('invalid_parameters_values')
 
-# Version
-version = calculations.read_from_configuration(0)
-prefix = calculations.read_from_configuration(1)
-version = 'v' + version + '-' + prefix
-
 # Language
 if not os.path.exists('languages') or not os.listdir('languages'):
-    messagebox.showerror('Error', 'Missing language files')
-    exit()
+    if prefix == '':
+        url_languages = \
+            'https://raw.githubusercontent.com/Ariollex/causal-relationships-in-school/main/languages/languages.zip'
+    else:
+        url_languages = \
+            'https://raw.githubusercontent.com/Ariollex/causal-relationships-in-school/dev/languages/languages.zip'
+    messagebox.showwarning('Warning!', 'The language files was not found. Downloading from ' + url_languages)
+    response = requests.get(url_languages, timeout=None)
+    with open('languages-' + version, "wb") as file:
+        file.write(response.content)
+    archive = 'languages-' + version
+    with zipfile.ZipFile(archive, 'r') as zip_file:
+        zip_file.extractall('languages')
+    os.remove(archive)
 
-language = calculations.read_from_configuration(2)
+language = calculations.read_from_configuration(0)
 if not set_language(language):
-    delayed_start.insert(0, 'invalid_language')
+    delayed_start.append('invalid_language')
     language_status = 'undefined'
 else:
     language_status = 'active'
 
 # Dataset
-file_loc = calculations.read_from_configuration(10)
+file_loc = calculations.read_from_configuration(8)
 if not os.path.exists(file_loc):
     delayed_start.append('invalid_path_dataset')
     file_loc = None
@@ -81,16 +102,25 @@ if 'invalid_path_dataset' not in delayed_start:
 else:
     data = None
 
+
+def set_dataset_parameters():
+    global name, sex, parallel, letter, causes, time_causes, previous_causes
+    name = data[int(calculations.read_from_configuration(1)) - 1]
+    sex = data[int(calculations.read_from_configuration(2)) - 1]
+    parallel = data[int(calculations.read_from_configuration(3)) - 1]
+    letter = data[int(calculations.read_from_configuration(4)) - 1]
+    causes = data[int(calculations.read_from_configuration(5)) - 1]
+    time_causes = data[int(calculations.read_from_configuration(6)) - 1]
+    previous_causes = data[int(calculations.read_from_configuration(7)) - 1]
+
+
+name, sex, parallel, letter, causes, time_causes, previous_causes = \
+    pandas.Index([]), pandas.Index([]), pandas.Index([]), pandas.Index([]), pandas.Index([]), pandas.Index([]), \
+    pandas.Index([])
+
 # Dataset settings
 if 'invalid_parameters_values' not in delayed_start and data is not None:
-    name = data[int(calculations.read_from_configuration(3)) - 1]
-    sex = data[int(calculations.read_from_configuration(4)) - 1]
-    parallel = data[int(calculations.read_from_configuration(5)) - 1]
-    letter = data[int(calculations.read_from_configuration(6)) - 1]
-    causes = data[int(calculations.read_from_configuration(7)) - 1]
-    time_causes = data[int(calculations.read_from_configuration(8)) - 1]
-    previous_causes = data[int(calculations.read_from_configuration(9)) - 1]
-
+    set_dataset_parameters()
     # Convert time
     for i in range(data.shape[0]):
         time_causes[i] = int(str(time_causes[i]).replace(':', '')) if time_causes[i] != 0 else int(time_causes[i])
@@ -126,11 +156,11 @@ def change_language(back_btn=None, delayed_start_var=False):
     Label(window, text='Available languages:').grid(column=0, row=0)
     count_row = 1
     for i in range(len(files)):
-        Button(window, text=files[i].replace('strings_', '').replace('.xlsx', ''),
-               command=lambda j=i: change_language_process(files, j, delayed_start_var)).grid(column=0, row=count_row)
-        count_row = count_row + 1
-    Label(window, text='Please note that if the dataset and the program language are different, there may be errors.') \
-        .grid(column=0, row=count_row + 1)
+        if files[i][:8] == 'strings_':
+            Button(window, text=files[i].replace('strings_', '').replace('.xlsx', ''),
+                   command=lambda j=i: change_language_process(files, j, delayed_start_var)) \
+                .grid(column=0, row=count_row)
+            count_row = count_row + 1
     column_btn = 0
     translated = False
     if back_btn:
@@ -140,10 +170,36 @@ def change_language(back_btn=None, delayed_start_var=False):
     exit_button(column_btn, count_row + 2, translated)
 
 
+def disable_scroll():
+    # h_scrollbar.pack_forget()
+    v_scrollbar.pack_forget()
+    container.pack_forget()
+
+
+def active_scroll():
+    setup_scroll()
+    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+    canvas.configure(yscrollcommand=v_scrollbar.set, scrollregion=canvas.bbox(ALL))
+    container.pack()
+    canvas.pack(side='left', fill='both')
+    v_scrollbar.pack(side="right", fill="y", expand=1)
+    # h_scrollbar.pack(side="bottom", fill="x")
+    v_scrollbar.config()
+    # h_scrollbar.config()
+
+
+# bind scrolling to mousewheel
+# def _scroll_canvas(event):
+#     canvas.yview_scroll(-1 * (int(event.delta / 100)), "units")
+
+
 def clear_window(message=None):
+    disable_scroll()
     for widget in button_frame.winfo_children():
         widget.destroy()
     for widget in window.winfo_children():
+        widget.destroy()
+    for widget in scrollable_frame.winfo_children():
         widget.destroy()
     if message is not None:
         Label(window, text=message, fg='red').grid(column=0, row=0)
@@ -169,30 +225,24 @@ def apply_dataset(changes, delayed_start_var=False, apply_exit=None):
             messagebox.showerror(print_on_language(1, 41), print_on_language(1, 53))
             return
         else:
-            change_configuration(supported_parameters[3 + i], indexes[3 + i], changes[i].get())
+            change_configuration(supported_parameters[1 + i], indexes[1 + i], changes[i].get())
     if len(calculations.check_configuration(only_dataset=True)) != 0:
         messagebox.showerror(print_on_language(1, 41), print_on_language(1, 54))
         return
     else:
         global list_incidents, name, sex, parallel, letter, causes, time_causes, previous_causes, configuration
         configuration = open("configuration", 'r').read().split('\n')
-        name = data[int(configuration[indexes[3]][str(configuration[indexes[3]]).find("'") + 1:
-                                                  str(configuration[indexes[3]]).rfind("'")]) - 1]
-        sex = data[int(configuration[indexes[4]][str(configuration[indexes[4]]).find("'") + 1:
-                                                 str(configuration[indexes[4]]).rfind("'")]) - 1]
-        parallel = data[int(configuration[indexes[5]][str(configuration[indexes[5]]).find("'") + 1:
-                                                      str(configuration[indexes[5]]).rfind("'")]) - 1]
-        letter = data[int(configuration[indexes[6]][str(configuration[indexes[6]]).find("'") + 1:
-                                                    str(configuration[indexes[6]]).rfind("'")]) - 1]
-        causes = data[int(configuration[indexes[7]][str(configuration[indexes[7]]).find("'") + 1:
-                                                    str(configuration[indexes[7]]).rfind("'")]) - 1]
-        time_causes = data[int(configuration[indexes[8]][str(configuration[indexes[8]]).find("'") + 1:
-                                                         str(configuration[indexes[8]]).rfind("'")]) - 1]
-        previous_causes = data[int(configuration[indexes[9]][str(configuration[indexes[9]]).find("'") + 1:
-                                                             str(configuration[indexes[9]]).rfind("'")]) - 1]
+        calculations.set_variables(configuration)
+        set_dataset_parameters()
         # Convert time
         for i in range(data.shape[0]):
-            time_causes[i] = int(str(time_causes[i]).replace(':', '')) if time_causes[i] != 0 else int(time_causes[i])
+            if str(time_causes[i]).replace(':', '').isdigit():
+                time_causes[i] = int(str(time_causes[i]).replace(':', '')) if time_causes[i] != 0 \
+                    else int(time_causes[i])
+            else:
+                messagebox.showerror(print_on_language(1, 41), print_on_language(1, 53))
+                return
+
         # Re-creating a list of incidents
         list_incidents = calculations.make_list_incidents(data, name, sex, parallel, letter, causes,
                                                           time_causes, previous_causes)
@@ -224,7 +274,7 @@ def change_dataset(count_row):
             messagebox.showerror(print_on_language(1, 41), print_on_language(1, 42))
             return
         data, name_columns = set_dataset_parameters(new_file_loc)
-        change_configuration('dataset_path', indexes[10], new_file_loc)
+        change_configuration('dataset_path', indexes[8], new_file_loc)
         file_loc = new_file_loc
     window.winfo_children()[-2].destroy()
     Label(window, text=print_on_language(1, 34) + ': ' + str(file_loc)).grid(column=0, row=count_row + 1)
@@ -240,8 +290,8 @@ def settings_dataset(buttons=True):
     parameters_dataset = calculations.get_parameters_dataset()
     entries = []
     for i in range(len(parameters_dataset)):
-        v = StringVar(root, value=str(configuration[indexes[3 + i]][str(configuration[indexes[3 + i]]).find("'") + 1:
-                                                                    str(configuration[indexes[3 + i]]).rfind("'")]))
+        v = StringVar(root, value=str(configuration[indexes[1 + i]][str(configuration[indexes[1 + i]]).find("'") + 1:
+                                                                    str(configuration[indexes[1 + i]]).rfind("'")]))
         Label(window, text=parameters_dataset_translated[i]).grid(column=0, row=count_row, sticky=W)
         value_entry = Entry(window, textvariable=v)
         entries.append(value_entry)
@@ -267,17 +317,22 @@ def settings():
     exit_button(1, 1)
 
 
-def open_source_code():
-    webbrowser.open_new('https://github.com/Ariollex/causal-relationships-in-school')
+def open_link(link):
+    webbrowser.open_new(link)
 
 
 def about_program():
     clear_window()
     Label(window, text=print_on_language(1, 15)).grid(column=0, row=0)
-    Label(window, text=print_on_language(1, 44) + ': ' + version).grid(column=0, row=1)
-    Label(window, text=print_on_language(1, 45) + ': ' + 'Artem Agapkin').grid(column=0, row=2)
+    Button(window, text=print_on_language(1, 44) + ': ' + version,
+           command=lambda: open_link('https://github.com/Ariollex/causal-relationships-in-school/releases')) \
+        .grid(column=0, row=1)
+    Button(window, text=print_on_language(1, 45) + ': Artem Agapkin',
+           command=lambda: open_link('https://github.com/Ariollex')) \
+        .grid(column=0, row=2)
     Button(window, text=print_on_language(1, 46) + ': ' + 'https://github.com/Ariollex/causal-relationships-in-school',
-           command=open_source_code).grid(column=0, row=3)
+           command=lambda: open_link('https://github.com/Ariollex/causal-relationships-in-school')) \
+        .grid(column=0, row=3)
     back_button(0, 1, back_command=lambda: settings())
     exit_button(1, 1)
 
@@ -288,7 +343,7 @@ def mode_selection():
 
     # Program operation mode selection
     Button(window, text=modes[0], command=mode_causal_relationship).grid(column=0, row=1)
-    Button(window, text=modes[1], command=mode_graph).grid(column=0, row=2)
+    Button(window, text=modes[1], command=mode_chart).grid(column=0, row=2)
     Button(window, text=print_on_language(1, 31), command=settings).grid(column=0, row=3)
     exit_button(0, 4)
 
@@ -298,16 +353,18 @@ def mode_causal_relationship():
     info = []
     list_incidents_numbered = print_data.print_list_incidents(list_incidents)
     Label(window, text=print_on_language(1, 0)).grid(column=0, row=0)
+    active_scroll()
     count_row = len(list_incidents_numbered)
     for i in range(count_row):
-        Button(window, text=list_incidents_numbered[i], command=lambda j=i: mode_causal_relationship_process(j, info)) \
-            .grid(column=0, row=i + 1, sticky=W)
+        Button(scrollable_frame, text=list_incidents_numbered[i],
+               command=lambda j=i: mode_causal_relationship_process(j, info)).grid(column=0, row=i + 1, sticky=W)
     back_button(0, count_row + 1)
     exit_button(1, count_row + 1)
 
 
 def mode_causal_relationship_process(user_selection, info):
     clear_window()
+    active_scroll()
     if list_incidents[user_selection][1] == print_on_language(1, 4) or (print_on_language(3, 2) == 0):
         user_choice_text = print_on_language(1, 2) + ' ' + str(user_selection + 1) + '. ' + print_on_language(2, 2) + \
                            ': ' + str(list_incidents[user_selection][0])
@@ -321,38 +378,42 @@ def mode_causal_relationship_process(user_selection, info):
     calculations.intersection_of_time(list_incidents, user_selection, info, 0)
 
     # Calculations: conclusions
-    Label(window, text=calculations.conclusions(list_incidents, user_selection, info)).grid(column=0, row=1)
+    Label(scrollable_frame, text=calculations.conclusions(list_incidents, user_selection, info)).grid(column=0, row=1)
     back_button(0, 2, back_command=lambda: mode_causal_relationship())
     exit_button(1, 2)
 
 
-def mode_graph():
+def mode_chart():
     clear_window()
-    list_graphs_numbered = print_data.print_selection_list(available_graphs)
+    list_graphs_numbered = print_data.print_selection_list(available_charts)
     Label(window, text=print_on_language(1, 10) + ':')
     count_row = len(list_graphs_numbered)
     for i in range(count_row):
-        Button(window, text=list_graphs_numbered[i], command=lambda j=i: mode_graph_process(j)) \
+        if i == 3:
+            if len(parallel.value_counts().values) < 7 or len(previous_causes.value_counts().values) < 7:
+                continue
+        Button(window, text=list_graphs_numbered[i], command=lambda j=i: mode_chart_process(j)) \
             .grid(column=0, row=i + 1, sticky=W)
     back_button(0, count_row + 1)
     exit_button(1, count_row + 1)
 
 
-def mode_graph_process(choice_graph):
-    graphs.set_variables(list_incidents, causes, parallel, name_columns)
-    graphs.graph_selection(choice_graph, data)
-    count_row = len(available_graphs)
+def mode_chart_process(choice_chart):
+    charts.set_variables(list_incidents, causes, parallel, name_columns, previous_causes)
+    charts.chart_selection(choice_chart, data)
+    count_row = len(available_charts)
     back_button(0, count_row + 1)
     exit_button(1, count_row + 1)
 
 
 def start_variables():
-    global modes, available_graphs, parameters_dataset_translated, list_incidents
+    global modes, available_charts, parameters_dataset_translated, list_incidents
     # Modes
     modes = [print_on_language(1, 8), print_on_language(1, 9)]
 
     # Available graphs
-    available_graphs = [print_on_language(1, 5), print_on_language(1, 18), print_on_language(1, 19)]
+    available_charts = [print_on_language(1, 5), print_on_language(1, 18), print_on_language(1, 19),
+                        print_on_language(1, 56)]
 
     # Translated dataset parameters
     parameters_dataset_translated = [print_on_language(1, 36), print_on_language(1, 37), print_on_language(1, 17),
@@ -406,8 +467,28 @@ root = Tk()
 root.minsize(500, 150)
 window = Frame(root)
 window.pack(expand=True)
+container = Frame(root)
+canvas = Canvas(container)
+v_scrollbar = Scrollbar(container, orient="vertical", command=canvas.yview)
+h_scrollbar = Scrollbar(container, orient="horizontal", command=canvas.xview)
+scrollable_frame = Frame(canvas)
+
+
+def setup_scroll():
+    global container, canvas, v_scrollbar, h_scrollbar, scrollable_frame
+    container = Frame(root)
+    container.pack()
+    canvas = Canvas(container)
+    v_scrollbar = Scrollbar(container, orient="vertical", command=canvas.yview)
+    # h_scrollbar = Scrollbar(container, orient="horizontal", command=canvas.xview)
+    scrollable_frame = Frame(canvas)
+    scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+    # root.bind_all("<MouseWheel>", _scroll_canvas)
+
+
+setup_scroll()
 button_frame = Frame(root)
-button_frame.pack()
+button_frame.pack(side="bottom")
 
 if len(delayed_start) != 0:
     root.title('Causal relationships in school, ' + version)
