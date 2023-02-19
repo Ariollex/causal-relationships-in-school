@@ -10,37 +10,30 @@ def print_selection_list(example_list):
     return [str(i + 1) + ') ' + example_list[i] for i in range(len(example_list))]
 
 
-def is_fight(in_class, participants, student_class, suspicious, maximum, student_name):
-    result = print_on_language(1, 22) + ': '
-
-    if in_class == 0:
-        result = result + print_on_language(1, 23).lower()
-        if suspicious != 0:
-            result = result + '\n' + print_on_language(1, 24) + ' ' + maximum[0] + ' ' + \
-                     ', ' + print_on_language(2, 24) + ' ' + str(maximum[1]) + ' ' + print_on_language(3, 24)
-    else:
-        result = result + print_on_language(1, 23).lower() + ' ' + print_on_language(2, 23) + ' ' + str(student_class)
-        if suspicious != 0:
-            result = result + '\n' + print_on_language(1, 24) + ' ' + str(maximum[0]) + ' ' + \
-                     ', ' + print_on_language(2, 24) + ' ' + str(maximum[1]) + ' ' + print_on_language(3, 24)
-    result = result + '\n' + print_on_language(1, 25) + ' ' + str(len(participants) + 1) + ' ' + \
-        print_on_language(2, 25) + ':' + '\n' + str(student_name) + '\n' + '\n'.join(map(str, participants))
-    return result
-
-
-def is_incident_in_classroom(participants, student_class, suspicious, maximum, student_name):
-    result = print_on_language(1, 22) + ': '
-    result = result + print_on_language(1, 26).lower() + ' ' + print_on_language(2, 23) + ' ' + student_class
-    if suspicious != 0:
-        result = result + '\n' + print_on_language(1, 24) + ' ' + maximum[0] + ' ' + \
-                 print_on_language(2, 24) + ' ' + str(maximum[1]) + ' ' + print_on_language(3, 24)
-    result = result + '\n' + print_on_language(1, 27) + ' ' + str(len(participants) + 1) + ' ' + \
-        print_on_language(2, 27) + ':' + '\n' + student_name + '\n' + '\n'.join(map(str, participants))
-    return result
-
-
-def is_personal_incident(student_name, student_class):
-    result = print_on_language(1, 28) + ': ' + '\n'
-    result = result + print_on_language(1, 29).lower() + '\n' + student_class + ' ' + \
-        print_on_language(2, 29) + ' ' + student_name + '\n' + print_on_language(3, 29)
-    return result
+def full_information(is_fight, in_class, participants, student_class, suspicious, maximum, student_name,
+                     count_last_incidents, incident_time=0):
+    student_result, incident_result = str(), str()
+    student_result = student_result + print_on_language(1, 36) + ': ' + str(student_name) + '\n'
+    student_result = student_result + print_on_language(1, 63) + ': ' + str(student_class) + '\n'
+    student_result = student_result + print_on_language(1, 40) + ': ' + str(count_last_incidents) + '\n'
+    incident_result = incident_result + print_on_language(1, 64) + ': ' + (print_on_language(1, 67)
+                                                                           if in_class
+                                                                           else print_on_language(1, 68)) + '\n'
+    incident_result = incident_result + print_on_language(1, 28) + ': ' + (print_on_language(1, 67)
+                                                                           if not in_class and not is_fight
+                                                                           else print_on_language(1, 68)) + '\n'
+    incident_result = incident_result + print_on_language(1, 23) + ': ' + (print_on_language(1, 67) if is_fight
+                                                                           else print_on_language(1, 68)) + '\n'
+    if incident_time:
+        incident_result = incident_result + print_on_language(1, 39) + ': ' + \
+                          ':'.join([str(incident_time)[i:i + 2] for i in range(0, len(str(incident_time)), 2)]) + '\n'
+    if len(participants) != 0:
+        incident_result = incident_result + print_on_language(1, 27) + ' ' + str(len(participants) + 1) + ' ' + \
+                          print_on_language(2, 27) + ':' + '\n'
+        for i in range(len(participants)):
+            incident_result = incident_result + participants[i][0] + ' ' + participants[i][1] + '\n'
+    if suspicious:
+        incident_result = incident_result + '\n' + print_on_language(1, 24) + ' ' + str(maximum[0]) + ' ' + \
+                          ', ' + print_on_language(2, 24) + '\n' + str(maximum[1]) + ' ' + print_on_language(3,
+                                                                                                             24) + '\n'
+    return student_result, incident_result

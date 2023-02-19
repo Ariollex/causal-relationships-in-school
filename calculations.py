@@ -3,6 +3,8 @@ import numpy
 import os
 
 configuration, indexes, supported_parameters, parameters_dataset = [], [], [], []
+incident_time = 0
+participants = []
 
 
 def get_supported_parameters():
@@ -92,7 +94,7 @@ def intersection_of_classes(example_list_incidents, user_selection, info, func):
             if func == 0:
                 count = count + 1
             elif func == 1:
-                students.append(example_list_incidents[i][0])
+                students.append((example_list_incidents[i][0], example_list_incidents[i][2]))
     if func == 0:
         info.append([count, example_list_incidents[user_selection][2]])
     elif func == 1:
@@ -100,6 +102,7 @@ def intersection_of_classes(example_list_incidents, user_selection, info, func):
 
 
 def intersection_of_time(example_list_incidents, user_selection, info, func):
+    global incident_time
     count = 0
     students = []
     for i in range(len(example_list_incidents)):
@@ -107,39 +110,35 @@ def intersection_of_time(example_list_incidents, user_selection, info, func):
             if func == 0:
                 count = count + 1
             elif func == 1:
-                students.append(example_list_incidents[i][0])
+                students.append((example_list_incidents[i][0], example_list_incidents[i][2]))
+                incident_time = example_list_incidents[i][3]
     if func == 0:
         info.append([count, example_list_incidents[user_selection][3]])
     elif func == 1:
-        return students
+        return students, incident_time
 
 
-def intersection_of_previous_causes(example_list_incidents, participants):
+def intersection_of_previous_causes(example_list_incidents):
     maximum = [0, 0]
     for i in range(len(example_list_incidents)):
         for j in range(len(participants)):
-            if example_list_incidents[i][0] == participants[j] and example_list_incidents[0][4] > int(maximum[1]):
+            if example_list_incidents[i][0] == participants[j][0] and example_list_incidents[i][4] > int(maximum[1]):
                 maximum = [example_list_incidents[i][0], example_list_incidents[i][4]]
     return maximum
 
 
 def conclusions(example_list_incidents, user_selection, info):
+    global participants, incident_time
+    participants, incident_time = [], 0
     student_name = example_list_incidents[user_selection][0]
-    participants = None
     if info[1][0] != 0:
-        participants = intersection_of_time(example_list_incidents, user_selection, info, 1)
+        participants, incident_time = intersection_of_time(example_list_incidents, user_selection, info, 1)
     elif info[0][0] != 0:
         participants = intersection_of_classes(example_list_incidents, user_selection, info, 1)
-    maximum = (
-        intersection_of_previous_causes(example_list_incidents, participants) if participants is not None else [0, 0])
+    maximum = (intersection_of_previous_causes(example_list_incidents) if len(participants) != 0 else [0, 0])
+    count_last_incidents = example_list_incidents[user_selection][4]
     suspicious = (1 if maximum[1] > 4 else 0)
     class_matters = (1 if info[0][0] != 0 else 0)
     time_matters = (1 if info[1][0] != 0 else 0)
-    if time_matters == 1 and class_matters == 1:
-        return print_data.is_fight(1, participants, info[0][1], suspicious, maximum, student_name)
-    elif time_matters == 1 and class_matters == 0:
-        return print_data.is_fight(0, participants, 0, suspicious, maximum, student_name)
-    elif time_matters == 0 and class_matters == 1:
-        return print_data.is_incident_in_classroom(participants, info[0][1], suspicious, maximum, student_name)
-    else:
-        return print_data.is_personal_incident(student_name, info[0][1])
+    return print_data.full_information(time_matters, class_matters, participants, info[0][1], suspicious, maximum,
+                                       student_name, count_last_incidents, incident_time)
