@@ -364,8 +364,6 @@ def menu_causal_relationship():
     if is_debug:
         print(debug.i(), 'The causal relationship menu is open')
     info = []
-    # TODO: определение кол-во кластеров
-    print(list_incidents)
     # TODO: убрать [0 1 2] и заменить на переменные
     auto_number_clusters = True # TODO: сделать кнопку в настройках
     breaked_list = pandas.DataFrame(list_incidents).drop([0, 1, 2], axis=1)
@@ -449,8 +447,9 @@ def menu_settings():
     if is_debug:
         print(debug.i(), 'The settings are open')
     Button(window, text=print_on_language(1, 32), command=menu_settings_dataset).grid(column=0, row=0)
-    Button(window, text=print_on_language(1, 20), command=lambda: menu_language(True)).grid(column=0, row=1)
-    Button(window, text=print_on_language(1, 43), command=menu_about_program).grid(column=0, row=2)
+    Button(window, text='Causal rel kmeans test', command=menu_settings_causal_rel_mode).grid(column=0, row=1)
+    Button(window, text=print_on_language(1, 20), command=lambda: menu_language(True)).grid(column=0, row=2)
+    Button(window, text=print_on_language(1, 43), command=menu_about_program).grid(column=0, row=3)
     back_button(0, 1)
     exit_button(1, 1)
 
@@ -592,6 +591,30 @@ def short_filename(file_path):
         return str(None)
 
 
+def menu_settings_causal_rel_mode():
+    clear_window()
+    # Kmeans
+    # auto_number_clusters
+    v = StringVar()
+    Label(window, text='KMeans').grid(column=0, row=0, sticky='w')
+    Label(window, text='Use KMeans for sort').grid(column=0, row=1)
+    Button(window, textvariable=v, command=lambda: active_kmeans(v)).grid(column=1, row=1)
+    v.set('Enabled') # TODO: read from configuration
+    back_button(0, 1, back_command=menu_settings)
+    exit_button(1, 1)
+
+
+def active_kmeans(text):
+    global auto_number_clusters
+    print(auto_number_clusters)
+    if not auto_number_clusters:
+        auto_number_clusters = True
+        text.set('Enabled')
+    else:
+        auto_number_clusters = False
+        text.set('Disabled')
+    root.update()
+
 def menu_language(back_btn=None, delayed_start_var=False):
     clear_window()
     files = os.listdir(os.getcwd() + '/languages')
@@ -709,6 +732,7 @@ status_scroll = 'disabled'
 button_frame = Frame(root)
 button_frame.pack(side="bottom")
 count_click_ee = 0
+auto_number_clusters = True
 
 if len(delayed_start) != 0:
     root.title('Causal relationships in school, ' + version)

@@ -78,7 +78,8 @@ def check_parameters():
 def check_configuration(only_dataset=False, only_indexes=False):
     global indexes, supported_parameters
     supported_parameters = ['language', 'name', 'sex', 'parallel', 'letter', 'causes',
-                            'time_causes', 'previous_causes', 'dataset_path']
+                            'time_causes', 'previous_causes', 'dataset_path', 'beta_settings',
+                            'auto_number_clusters']
     indexes = [numpy.nan] * len(supported_parameters)
     warnings = []
     missing_parameters = []
