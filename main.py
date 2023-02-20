@@ -450,8 +450,24 @@ def menu_settings():
     Button(window, text='Causal rel kmeans test', command=menu_settings_causal_rel_mode).grid(column=0, row=1)
     Button(window, text=print_on_language(1, 20), command=lambda: menu_language(True)).grid(column=0, row=2)
     Button(window, text=print_on_language(1, 43), command=menu_about_program).grid(column=0, row=3)
+    Label(window, text='Beta settings').grid(column=0, row=4)
+    v = StringVar()
+    Button(window, textvariable=v, command=lambda: active_beta_settings(v)).grid(column=1, row=4)
+    v.set('Disabled')
     back_button(0, 1)
     exit_button(1, 1)
+
+
+def active_beta_settings(text):
+    global beta_settings
+    print(beta_settings)
+    if not beta_settings:
+        beta_settings = True
+        text.set('Enabled')
+    else:
+        beta_settings = False
+        text.set('Disabled')
+    root.update()
 
 
 def menu_settings_dataset(buttons=True):
@@ -732,6 +748,7 @@ status_scroll = 'disabled'
 button_frame = Frame(root)
 button_frame.pack(side="bottom")
 count_click_ee = 0
+beta_settings = False
 auto_number_clusters = True
 
 if len(delayed_start) != 0:
