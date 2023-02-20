@@ -366,7 +366,15 @@ def menu_causal_relationship():
     info = []
     # TODO: определение кол-во кластеров
     print(list_incidents)
-    calculations.kmeans_test(list_incidents, pandas.DataFrame(list_incidents).drop([0, 1, 2], axis=1))
+    # TODO: убрать [0 1 2] и заменить на переменные
+    auto_number_clusters = True # TODO: сделать кнопку в настройках
+    breaked_list = pandas.DataFrame(list_incidents).drop([0, 1, 2], axis=1)
+    if auto_number_clusters:
+        clusters = calculations.auto_kmeans_clusters(breaked_list)
+    else:
+        clusters = 2 # TODO: сделать поле с кластерами
+    sorted_list = calculations.sort_by_kmeans_clusters(list_incidents, breaked_list, clusters)
+    print(sorted_list)
     list_incidents_numbered = print_data.print_list_incidents(list_incidents)
     Label(head, text=print_on_language(1, 0)).grid(column=0, row=0)
     active_scroll()
