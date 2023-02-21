@@ -69,11 +69,49 @@ if len(missing_parameters) != 0:
     print(*['- ' + missing_parameters[i] for i in range(len(missing_parameters))], sep='\n')
     error.broken_configuration()
 set_variables(configuration, indexes)
-errors = calculations.check_parameters()
+
+
+def update_configuration():
+    global configuration
+    configuration = open(os.getcwd() + '/configuration', 'r').read().split('\n')
+    calculations.set_variables(configuration)
+
+
+def change_configuration(option, line, argument):
+    lines = open("configuration", 'r').readlines()
+    lines[line] = option + " = '" + argument + "'\n"
+    try:
+        out = open("configuration", 'w')
+        out.writelines(lines)
+        out.close()
+    except PermissionError:
+        # TODO: перевод
+        messagebox.showwarning('Err' 'Try later ;D')
+
+
+def reset_variables(resets_array):
+    if 'num_clusters' in resets_array:
+        if calculations.read_from_configuration(11).isdigit():
+            num = int(calculations.read_from_configuration(11))
+            if num < 2:
+                num = 2
+            else:
+                num = 15
+        else:
+            num = 2
+        change_configuration('num_clusters', indexes[11], str(num))
+    update_configuration()
+
+
+errors, resets = calculations.check_parameters()
 if len(errors) > 0:
     if is_debug:
-        [str(debug.w()) + str(error.warning(errors[i])) for i in range(len(errors))]
+        [str(error.warning(errors[i])) for i in range(len(errors))]
     delayed_start.append('invalid_parameters_values')
+if len(resets) > 0:
+    if is_debug:
+        [error.warning('Resetting ' + str(resets[i]) + ' value!') for i in range(len(resets))]
+    reset_variables(resets)
 
 # Language
 if not os.path.exists(os.getcwd() + '/languages') or not os.listdir(os.getcwd() + '/languages'):
@@ -233,14 +271,6 @@ def fix_configuration():
         menu_main()
 
 
-def change_configuration(option, line, argument):
-    lines = open("configuration", 'r').readlines()
-    lines[line] = option + " = '" + argument + "'\n"
-    out = open("configuration", 'w')
-    out.writelines(lines)
-    out.close()
-
-
 def setup_scroll():
     global container, canvas, v_scrollbar, h_scrollbar, scrollable_frame
     container = Frame(root)
@@ -260,7 +290,6 @@ def active_scroll():
     canvas.pack(side='left', fill='both', expand=True, padx=70, pady=5)
     v_scrollbar.pack(side="right", fill="y")
     status_scroll = 'active'
-    # h_scrollbar.pack(side="bottom", fill="x", expand=True))
 
 
 def disable_scroll():
@@ -359,28 +388,32 @@ def menu_main():
 
 
 def menu_causal_relationship():
+    global gen_best_variant, sorted_list
     clear_window()
     window.pack_forget()
-    print(type(beta_settings), beta_settings)
     if is_debug:
         print(debug.i(), 'The causal relationship menu is open')
     info = []
-    # TODO: Добавить классы (преобразовать буквы в ASCII)
     cropped_list = make_cropped_list(list_incidents)
     if auto_number_clusters:
-        clusters = calculations.auto_kmeans_clusters(cropped_list)
+        if gen_best_variant is None:
+            gen_best_variant = calculations.auto_kmeans_clusters(cropped_list)
+        clusters = gen_best_variant
     else:
         clusters = int(calculations.read_from_configuration(11))
-    sorted_list = calculations.sort_by_kmeans_clusters(list_incidents, cropped_list, clusters)
+    if sorted_list is None:
+        sorted_list = calculations.sort_by_kmeans_clusters(list_incidents, cropped_list, clusters)
     list_incidents_numbered = print_data.print_list_incidents(list_incidents)
     Label(head, text=print_on_language(1, 0)).grid(column=0, row=0)
     if beta_settings:
         v = StringVar()
         Button(head, textvariable=v, command=lambda: group_by_kmeans(v)).grid(column=1, row=0, sticky='e')
-        v.set('alphabet')
+        v.set('Alphabet')
     active_scroll()
     scrollable_frame.grid_columnconfigure(0, weight=1)
     if kmeans_group:
+        # TODO: translate
+        Button(head, text='Regenerate list', command=regen_sorted_list).grid()
         count_row = len(sorted_list)
         count = 0
         for i in range(count_row):
@@ -398,6 +431,14 @@ def menu_causal_relationship():
                                                                                            sticky='w')
     back_button(0, count_row + 1)
     exit_button(1, count_row + 1)
+
+
+def regen_sorted_list():
+    global gen_best_variant, sorted_list, kmeans_group
+    gen_best_variant, sorted_list = None, None
+    kmeans_group = True
+    menu_causal_relationship()
+    root.update()
 
 
 def group_by_kmeans(v):
@@ -475,12 +516,12 @@ def mode_chart_process(choice_chart):
 
 def menu_settings():
     clear_window()
-    print(beta_settings)
     if is_debug:
         print(debug.i(), 'The settings are open')
     Button(window, text=print_on_language(1, 32), command=menu_settings_dataset).grid(column=0, row=0)
     if beta_settings:
         Button(window, text='Causal rel kmeans test', command=menu_settings_causal_rel_mode).grid(column=0, row=1)
+    window.columnconfigure(0, minsize=140)
     Button(window, text=print_on_language(1, 20), command=lambda: menu_language(True)).grid(column=0, row=2)
     Button(window, text=print_on_language(1, 43), command=menu_about_program).grid(column=0, row=3)
     Label(window, text='Beta settings').grid(column=0, row=4, sticky='w')
@@ -650,6 +691,7 @@ def short_filename(file_path):
 def menu_settings_causal_rel_mode():
     clear_window()
     v = StringVar()
+    # TODO: Переводы
     Label(window, text='KMeans', background='#DCDCDC').grid(column=0, row=0, sticky='w')
     Label(window, text='Autogenerate number of clusters').grid(column=0, row=1)
     Button(window, textvariable=v, command=lambda: active_auto_number_clusters(v)).grid(column=1, row=1)
@@ -671,15 +713,16 @@ def menu_settings_causal_rel_mode():
 
 def apply_clusters(entries, v_exit=False):
     global configuration
-    # TODO: Сделать функцию с обновлением configuration
-    change_configuration('num_clusters', indexes[11], str(entries[0].get()))
-    configuration = open("configuration", 'r').read().split('\n')
-    calculations.set_variables(configuration)
-    print(configuration)
-    if v_exit:
-        exit('I Exiting')
+    if entries[0].get().isdigit() and 2 <= int(str(entries[0].get())) <= 15:
+        change_configuration('num_clusters', indexes[11], str(entries[0].get()))
+        update_configuration()
+        if v_exit:
+            exit('I Exiting')
+        else:
+            menu_settings()
     else:
-        menu_settings()
+        # TODO: Перевод
+        messagebox.showerror('Err', 'Incorrect value num_clusters')
 
 
 def active_auto_number_clusters(text):
@@ -687,11 +730,11 @@ def active_auto_number_clusters(text):
     if auto_number_clusters:
         auto_number_clusters = False
         change_configuration('auto_number_clusters', indexes[10], str(0))
-        text.set('Disabled')
+        text.set('Enabled')
     else:
         auto_number_clusters = True
         change_configuration('auto_number_clusters', indexes[10], str(1))
-        text.set('Enabled')
+        text.set('Disabled')
     if debug:
         print(debug.i(), 'auto number clusters:', auto_number_clusters)
     root.update()
@@ -815,11 +858,12 @@ status_scroll = 'disabled'
 button_frame = Frame(root)
 button_frame.pack(side="bottom")
 count_click_ee = 0
-beta_settings = bool(int(configuration[indexes[9]][str(configuration[indexes[9]]).find("'") + 1:
-                                                   str(configuration[indexes[9]]).rfind("'")]))
-auto_number_clusters = bool(int(configuration[indexes[10]][str(configuration[indexes[10]]).find("'") + 1:
-                                                           str(configuration[indexes[10]]).rfind("'")]))
+beta_settings = bool(int(calculations.read_from_configuration(9)))
+auto_number_clusters = bool(int(calculations.read_from_configuration(10)))
+gen_best_variant = None
+sorted_list = None
 kmeans_group = False
+
 if len(delayed_start) != 0:
     root.title('Causal relationships in school, ' + version)
     configuration_status = 'break'
