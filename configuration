@@ -1,5 +1,5 @@
 # Language
-language = 'en-US'
+language = 'ru-RU'
 
 # Dataset settings
 # Path to dataset
@@ -15,9 +15,11 @@ time_causes = '6'
 previous_causes = '7'
 
 # Settings
-# Beta mode (settings being tested)
-beta_settings = 'False'
+# Beta mode (settings being tested, 1 - enabled, 0 - disabled)
+beta_settings = '0'
 
 # "Causal relationship" settings
-# Automatic generation of the number of clusters for KMeans
-auto_number_clusters = 'True'
+# Automatic generation of the number of clusters for KMeans (1 - enabled, 0 - disabled)
+auto_number_clusters = '1'
+# Number of clusters (2 <= num_clusters <= 15)
+num_clusters = '2'

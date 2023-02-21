@@ -60,6 +60,7 @@ def check_parameters():
     parameters_dataset = ['name', 'sex', 'parallel', 'letter', 'causes', 'time_causes', 'previous_causes']
     parameters_strings = ['language']
     parameters_path = ['dataset_path']
+    parameters_other = ['num_clusters']
     errors = []
     for i in range(len(supported_parameters)):
         example_parameter_name = supported_parameters[i]
@@ -72,6 +73,10 @@ def check_parameters():
             errors.append('Parameter "' + example_parameter_name + '" has an incorrect value! It should be string.')
         if example_parameter_name in parameters_path and not os.path.exists(example_parameter_value):
             errors.append('Parameter "' + example_parameter_name + '" has an incorrect path.')
+        if example_parameter_name in parameters_other and (not example_parameter_value.isdigit() or
+                                                           not (2 <= int(example_parameter_value) <= 15)):
+            errors.append('Parameter "' + example_parameter_name + '" has an incorrect value!')
+            # TODO: Автоматически заменять на 2 или 15
     return errors
 
 
@@ -79,7 +84,7 @@ def check_configuration(only_dataset=False, only_indexes=False):
     global indexes, supported_parameters
     supported_parameters = ['language', 'name', 'sex', 'parallel', 'letter', 'causes',
                             'time_causes', 'previous_causes', 'dataset_path', 'beta_settings',
-                            'auto_number_clusters']
+                            'auto_number_clusters', 'num_clusters']
     indexes = [numpy.nan] * len(supported_parameters)
     warnings = []
     missing_parameters = []

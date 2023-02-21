@@ -361,28 +361,59 @@ def menu_main():
 def menu_causal_relationship():
     clear_window()
     window.pack_forget()
+    print(type(beta_settings), beta_settings)
     if is_debug:
         print(debug.i(), 'The causal relationship menu is open')
     info = []
-    # TODO: убрать [0 1 2] и заменить на переменные
-    auto_number_clusters = True # TODO: сделать кнопку в настройках
-    breaked_list = pandas.DataFrame(list_incidents).drop([0, 1, 2], axis=1)
+    # TODO: Добавить классы (преобразовать буквы в ASCII)
+    cropped_list = make_cropped_list(list_incidents)
     if auto_number_clusters:
-        clusters = calculations.auto_kmeans_clusters(breaked_list)
+        clusters = calculations.auto_kmeans_clusters(cropped_list)
     else:
-        clusters = 2 # TODO: сделать поле с кластерами
-    sorted_list = calculations.sort_by_kmeans_clusters(list_incidents, breaked_list, clusters)
-    print(sorted_list)
+        clusters = int(calculations.read_from_configuration(11))
+    sorted_list = calculations.sort_by_kmeans_clusters(list_incidents, cropped_list, clusters)
     list_incidents_numbered = print_data.print_list_incidents(list_incidents)
     Label(head, text=print_on_language(1, 0)).grid(column=0, row=0)
+    if beta_settings:
+        v = StringVar()
+        Button(head, textvariable=v, command=lambda: group_by_kmeans(v)).grid(column=1, row=0, sticky='e')
+        v.set('alphabet')
     active_scroll()
     scrollable_frame.grid_columnconfigure(0, weight=1)
-    count_row = len(list_incidents_numbered)
-    for i in range(count_row):
-        Button(scrollable_frame, text=list_incidents_numbered[i],
-               command=lambda j=i: menu_causal_relationship_information(j, info)).grid(column=0, row=i + 1, sticky='w')
+    if kmeans_group:
+        count_row = len(sorted_list)
+        count = 0
+        for i in range(count_row):
+            for j in range(len(sorted_list[i])):
+                Button(scrollable_frame, text=sorted_list[i][j][0] + ' ' + sorted_list[i][j][2],
+                       command=lambda k=i: menu_causal_relationship_information(k, info)).grid(column=0, row=count + 1)
+                count = count + 1
+            Label(scrollable_frame).grid(column=0, row=count + 1)
+            count = count + 1
+    else:
+        count_row = len(list_incidents_numbered)
+        for i in range(count_row):
+            Button(scrollable_frame, text=list_incidents_numbered[i],
+                   command=lambda k=i: menu_causal_relationship_information(k, info)).grid(column=0, row=i + 1,
+                                                                                           sticky='w')
     back_button(0, count_row + 1)
     exit_button(1, count_row + 1)
+
+
+def group_by_kmeans(v):
+    global kmeans_group
+    if kmeans_group:
+        v.set('Alphabet')
+        kmeans_group = False
+    else:
+        v.set('KMeans')
+        kmeans_group = True
+    root.update()
+    menu_causal_relationship()
+
+
+def make_cropped_list(example_list):
+    return pandas.DataFrame(example_list).drop([0, 1, 2], axis=1)
 
 
 def menu_causal_relationship_information(user_selection, info):
@@ -444,30 +475,39 @@ def mode_chart_process(choice_chart):
 
 def menu_settings():
     clear_window()
+    print(beta_settings)
     if is_debug:
         print(debug.i(), 'The settings are open')
     Button(window, text=print_on_language(1, 32), command=menu_settings_dataset).grid(column=0, row=0)
-    Button(window, text='Causal rel kmeans test', command=menu_settings_causal_rel_mode).grid(column=0, row=1)
+    if beta_settings:
+        Button(window, text='Causal rel kmeans test', command=menu_settings_causal_rel_mode).grid(column=0, row=1)
     Button(window, text=print_on_language(1, 20), command=lambda: menu_language(True)).grid(column=0, row=2)
     Button(window, text=print_on_language(1, 43), command=menu_about_program).grid(column=0, row=3)
-    Label(window, text='Beta settings').grid(column=0, row=4)
+    Label(window, text='Beta settings').grid(column=0, row=4, sticky='w')
     v = StringVar()
-    Button(window, textvariable=v, command=lambda: active_beta_settings(v)).grid(column=1, row=4)
-    v.set('Disabled')
+    Button(window, textvariable=v, command=lambda: active_beta_settings(v)).grid(column=0, row=4, sticky='e')
+    if beta_settings:
+        v.set('Enabled')
+    else:
+        v.set('Disabled')
     back_button(0, 1)
     exit_button(1, 1)
 
 
 def active_beta_settings(text):
     global beta_settings
-    print(beta_settings)
-    if not beta_settings:
-        beta_settings = True
-        text.set('Enabled')
-    else:
+    if beta_settings:
         beta_settings = False
+        change_configuration('beta_settings', indexes[9], str(0))
         text.set('Disabled')
+    else:
+        beta_settings = True
+        change_configuration('beta_settings', indexes[9], str(1))
+        text.set('Enabled')
+    if debug:
+        print(debug.i(), 'Beta settings:', beta_settings)
     root.update()
+    menu_settings()
 
 
 def menu_settings_dataset(buttons=True):
@@ -609,27 +649,54 @@ def short_filename(file_path):
 
 def menu_settings_causal_rel_mode():
     clear_window()
-    # Kmeans
-    # auto_number_clusters
     v = StringVar()
-    Label(window, text='KMeans').grid(column=0, row=0, sticky='w')
-    Label(window, text='Use KMeans for sort').grid(column=0, row=1)
-    Button(window, textvariable=v, command=lambda: active_kmeans(v)).grid(column=1, row=1)
-    v.set('Enabled') # TODO: read from configuration
-    back_button(0, 1, back_command=menu_settings)
-    exit_button(1, 1)
-
-
-def active_kmeans(text):
-    global auto_number_clusters
-    print(auto_number_clusters)
-    if not auto_number_clusters:
-        auto_number_clusters = True
-        text.set('Enabled')
+    Label(window, text='KMeans', background='#DCDCDC').grid(column=0, row=0, sticky='w')
+    Label(window, text='Autogenerate number of clusters').grid(column=0, row=1)
+    Button(window, textvariable=v, command=lambda: active_auto_number_clusters(v)).grid(column=1, row=1)
+    if auto_number_clusters:
+        v.set('Enabled')
+        back_button(0, 2, back_command=menu_settings)
+        exit_button(1, 2)
     else:
+        v.set('Disabled')
+        entries = []
+        current_v = StringVar(root, value=calculations.read_from_configuration(11))
+        Label(window, text='Number of clusters').grid(column=0, row=2, sticky='w')
+        value_entry = Entry(window, textvariable=current_v, width=9)
+        entries.append(value_entry)
+        value_entry.grid(column=1, row=2)
+        back_button(0, 2, back_command=lambda: apply_clusters(entries))
+        exit_button(1, 2, exit_command=lambda: apply_clusters(entries, v_exit=True))
+
+
+def apply_clusters(entries, v_exit=False):
+    global configuration
+    # TODO: Сделать функцию с обновлением configuration
+    change_configuration('num_clusters', indexes[11], str(entries[0].get()))
+    configuration = open("configuration", 'r').read().split('\n')
+    calculations.set_variables(configuration)
+    print(configuration)
+    if v_exit:
+        exit('I Exiting')
+    else:
+        menu_settings()
+
+
+def active_auto_number_clusters(text):
+    global auto_number_clusters
+    if auto_number_clusters:
         auto_number_clusters = False
+        change_configuration('auto_number_clusters', indexes[10], str(0))
         text.set('Disabled')
+    else:
+        auto_number_clusters = True
+        change_configuration('auto_number_clusters', indexes[10], str(1))
+        text.set('Enabled')
+    if debug:
+        print(debug.i(), 'auto number clusters:', auto_number_clusters)
     root.update()
+    menu_settings_causal_rel_mode()
+
 
 def menu_language(back_btn=None, delayed_start_var=False):
     clear_window()
@@ -748,9 +815,11 @@ status_scroll = 'disabled'
 button_frame = Frame(root)
 button_frame.pack(side="bottom")
 count_click_ee = 0
-beta_settings = False
-auto_number_clusters = True
-
+beta_settings = bool(int(configuration[indexes[9]][str(configuration[indexes[9]]).find("'") + 1:
+                                                   str(configuration[indexes[9]]).rfind("'")]))
+auto_number_clusters = bool(int(configuration[indexes[10]][str(configuration[indexes[10]]).find("'") + 1:
+                                                           str(configuration[indexes[10]]).rfind("'")]))
+kmeans_group = False
 if len(delayed_start) != 0:
     root.title('Causal relationships in school, ' + version)
     configuration_status = 'break'
