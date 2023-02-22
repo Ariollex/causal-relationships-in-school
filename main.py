@@ -350,7 +350,7 @@ def clear_window(message=None):
         disable_scroll()
     for widget in button_frame.winfo_children() + head.winfo_children() + window.winfo_children():
         widget.destroy()
-    head.pack(side='top')
+    head.pack_forget()
     window.pack(expand=True)
     if message is not None:
         Label(window, text=message, fg='red').grid(column=0, row=0)
@@ -391,6 +391,7 @@ def menu_causal_relationship():
     global gen_best_variant, sorted_list
     clear_window()
     window.pack_forget()
+    head.pack(side='top')
     if is_debug:
         print(debug.i(), 'The causal relationship menu is open')
     info = []
@@ -406,20 +407,25 @@ def menu_causal_relationship():
     list_incidents_numbered = print_data.print_list_incidents(list_incidents)
     Label(head, text=print_on_language(1, 0)).grid(column=0, row=0)
     if beta_settings:
-        v = StringVar()
-        Button(head, textvariable=v, command=lambda: group_by_kmeans(v)).grid(column=1, row=0, sticky='e')
-        v.set('Alphabet')
+        if kmeans_group:
+            v = 'KMeans'
+        else:
+            v = 'Alphabet'
+        # TODO: translate
+        Label(head, text='Sort mode: ').grid(column=0, row=1, sticky='w')
+        Button(head, text=v, command=group_by_kmeans).grid(column=0, row=1, sticky='e')
     active_scroll()
     scrollable_frame.grid_columnconfigure(0, weight=1)
     if kmeans_group:
         # TODO: translate
-        Button(head, text='Regenerate list', command=regen_sorted_list).grid()
+        Button(head, text='Regenerate list', command=regen_sorted_list).grid(column=0, row=2)
         count_row = len(sorted_list)
         count = 0
         for i in range(count_row):
             for j in range(len(sorted_list[i])):
                 Button(scrollable_frame, text=sorted_list[i][j][0] + ' ' + sorted_list[i][j][2],
-                       command=lambda k=i: menu_causal_relationship_information(k, info)).grid(column=0, row=count + 1)
+                       command=lambda k=i: menu_causal_relationship_information(k, info)).grid(column=0, row=count + 1,
+                                                                                               sticky='w')
                 count = count + 1
             Label(scrollable_frame).grid(column=0, row=count + 1)
             count = count + 1
@@ -441,14 +447,9 @@ def regen_sorted_list():
     root.update()
 
 
-def group_by_kmeans(v):
+def group_by_kmeans():
     global kmeans_group
-    if kmeans_group:
-        v.set('Alphabet')
-        kmeans_group = False
-    else:
-        v.set('KMeans')
-        kmeans_group = True
+    kmeans_group = not kmeans_group
     root.update()
     menu_causal_relationship()
 
@@ -460,6 +461,7 @@ def make_cropped_list(example_list):
 def menu_causal_relationship_information(user_selection, info):
     clear_window()
     window.pack_forget()
+    head.pack(side='top')
     if is_debug:
         print(debug.i(), 'The causal relationship menu about student is open')
     active_scroll()
@@ -694,14 +696,14 @@ def menu_settings_causal_rel_mode():
     # TODO: Переводы
     Label(window, text='KMeans', background='#DCDCDC').grid(column=0, row=0, sticky='w')
     Label(window, text='Autogenerate number of clusters').grid(column=0, row=1)
-    Button(window, textvariable=v, command=lambda: active_auto_number_clusters(v)).grid(column=1, row=1)
+    Button(window, textvariable=v, command=lambda: active_auto_number_clusters(v, entries)).grid(column=1, row=1)
+    entries = []
     if auto_number_clusters:
         v.set('Enabled')
         back_button(0, 2, back_command=menu_settings)
         exit_button(1, 2)
     else:
         v.set('Disabled')
-        entries = []
         current_v = StringVar(root, value=calculations.read_from_configuration(11))
         Label(window, text='Number of clusters').grid(column=0, row=2, sticky='w')
         value_entry = Entry(window, textvariable=current_v, width=9)
@@ -711,21 +713,25 @@ def menu_settings_causal_rel_mode():
         exit_button(1, 2, exit_command=lambda: apply_clusters(entries, v_exit=True))
 
 
-def apply_clusters(entries, v_exit=False):
+def apply_clusters(entries, v_exit=False, action=1):
     global configuration
-    if entries[0].get().isdigit() and 2 <= int(str(entries[0].get())) <= 15:
+    if len(entries) == 0:
+        return
+    elif entries[0].get().isdigit() and 2 <= int(str(entries[0].get())) <= 15:
         change_configuration('num_clusters', indexes[11], str(entries[0].get()))
         update_configuration()
-        if v_exit:
-            exit('I Exiting')
-        else:
-            menu_settings()
+        if action:
+            if v_exit:
+                exit('I Exiting')
+            else:
+                menu_settings()
     else:
         # TODO: Перевод
         messagebox.showerror('Err', 'Incorrect value num_clusters')
 
 
-def active_auto_number_clusters(text):
+def active_auto_number_clusters(text, entries):
+    apply_clusters(entries, action=0)
     global auto_number_clusters
     if auto_number_clusters:
         auto_number_clusters = False

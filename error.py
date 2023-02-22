@@ -1,6 +1,3 @@
-import debug
-
-
 def error(message, exit_message):
     print('\033[91mError! \033[0m' + message)
     if exit_message != 0:
