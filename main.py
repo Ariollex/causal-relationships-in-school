@@ -378,11 +378,12 @@ def menu_main():
     if is_debug:
         print(debug.i(), 'The main menu is open')
     Label(window, text=print_on_language(1, 6) + '. ' + print_on_language(1, 7) + ':').grid(column=0, row=0)
+    width = max([len(modes[0]), len(modes[1]), len(print_on_language(1, 31))])
 
     # Program operation mode selection
-    Button(window, text=modes[0], command=menu_causal_relationship).grid(column=0, row=1)
-    Button(window, text=modes[1], command=menu_charts).grid(column=0, row=2)
-    Button(window, text=print_on_language(1, 31), command=menu_settings).grid(column=0, row=3)
+    Button(window, text=modes[0], command=menu_causal_relationship, width=width).grid(column=0, row=1)
+    Button(window, text=modes[1], command=menu_charts, width=width).grid(column=0, row=2)
+    Button(window, text=print_on_language(1, 31), command=menu_settings, width=width).grid(column=0, row=3)
     exit_button(0, 4)
 
 
@@ -465,7 +466,7 @@ def menu_causal_relationship_information(user_selection, info, show_number=True)
     active_scroll()
     scrollable_frame.grid_columnconfigure(0, weight=1, minsize=300)
     if show_number:
-        user_choice_text =  print_on_language(1, 2) + ' ' + str(user_selection + 1) + '. '
+        user_choice_text = print_on_language(1, 2) + ' ' + str(user_selection + 1) + '. '
     else:
         user_choice_text = ''
     if list_incidents[user_selection][1] == print_on_language(1, 4) or (print_on_language(3, 2) == 0):
