@@ -69,11 +69,48 @@ if len(missing_parameters) != 0:
     print(*['- ' + missing_parameters[i] for i in range(len(missing_parameters))], sep='\n')
     error.broken_configuration()
 set_variables(configuration, indexes)
-errors = calculations.check_parameters()
+
+
+def update_configuration():
+    global configuration
+    configuration = open(os.getcwd() + '/configuration', 'r').read().split('\n')
+    calculations.set_variables(configuration)
+
+
+def change_configuration(option, line, argument):
+    lines = open("configuration", 'r').readlines()
+    lines[line] = option + " = '" + argument + "'\n"
+    try:
+        out = open("configuration", 'w')
+        out.writelines(lines)
+        out.close()
+    except PermissionError:
+        messagebox.showwarning(print_on_language(1, 41), print_on_language(1, 74))
+
+
+def reset_variables(resets_array):
+    if 'num_clusters' in resets_array:
+        if calculations.read_from_configuration(11).isdigit():
+            num = int(calculations.read_from_configuration(11))
+            if num < 2:
+                num = 2
+            else:
+                num = 15
+        else:
+            num = 2
+        change_configuration('num_clusters', indexes[11], str(num))
+    update_configuration()
+
+
+errors, resets = calculations.check_parameters()
 if len(errors) > 0:
     if is_debug:
-        [str(debug.w()) + str(error.warning(errors[i])) for i in range(len(errors))]
+        [str(error.warning(errors[i])) for i in range(len(errors))]
     delayed_start.append('invalid_parameters_values')
+if len(resets) > 0:
+    if is_debug:
+        [error.warning('Resetting ' + str(resets[i]) + ' value!') for i in range(len(resets))]
+    reset_variables(resets)
 
 # Language
 if not os.path.exists(os.getcwd() + '/languages') or not os.listdir(os.getcwd() + '/languages'):
@@ -233,14 +270,6 @@ def fix_configuration():
         menu_main()
 
 
-def change_configuration(option, line, argument):
-    lines = open("configuration", 'r').readlines()
-    lines[line] = option + " = '" + argument + "'\n"
-    out = open("configuration", 'w')
-    out.writelines(lines)
-    out.close()
-
-
 def setup_scroll():
     global container, canvas, v_scrollbar, h_scrollbar, scrollable_frame
     container = Frame(root)
@@ -260,7 +289,6 @@ def active_scroll():
     canvas.pack(side='left', fill='both', expand=True, padx=70, pady=5)
     v_scrollbar.pack(side="right", fill="y")
     status_scroll = 'active'
-    # h_scrollbar.pack(side="bottom", fill="x", expand=True))
 
 
 def disable_scroll():
@@ -321,7 +349,7 @@ def clear_window(message=None):
         disable_scroll()
     for widget in button_frame.winfo_children() + head.winfo_children() + window.winfo_children():
         widget.destroy()
-    head.pack(side='top')
+    head.pack_forget()
     window.pack(expand=True)
     if message is not None:
         Label(window, text=message, fg='red').grid(column=0, row=0)
@@ -359,29 +387,78 @@ def menu_main():
 
 
 def menu_causal_relationship():
+    global gen_best_variant, sorted_list
     clear_window()
     window.pack_forget()
+    head.pack(side='top')
     if is_debug:
         print(debug.i(), 'The causal relationship menu is open')
     info = []
-    # TODO: определение кол-во кластеров
-    print(list_incidents)
-    calculations.kmeans_test(list_incidents, pandas.DataFrame(list_incidents).drop([0, 1, 2], axis=1))
+    cropped_list = make_cropped_list(list_incidents)
+    if auto_number_clusters:
+        if gen_best_variant is None:
+            gen_best_variant = calculations.auto_kmeans_clusters(cropped_list)
+        clusters = gen_best_variant
+    else:
+        clusters = int(calculations.read_from_configuration(11))
+    if sorted_list is None:
+        sorted_list = calculations.sort_by_kmeans_clusters(list_incidents, cropped_list, clusters)
     list_incidents_numbered = print_data.print_list_incidents(list_incidents)
     Label(head, text=print_on_language(1, 0)).grid(column=0, row=0)
+    if beta_settings:
+        if kmeans_group:
+            v = 'KMeans'
+        else:
+            v = print_on_language(1, 76)
+        Label(head, text=print_on_language(1, 75) + ': ').grid(column=0, row=1, sticky='w')
+        Button(head, text=v, command=group_by_kmeans).grid(column=0, row=1, sticky='e')
     active_scroll()
     scrollable_frame.grid_columnconfigure(0, weight=1)
-    count_row = len(list_incidents_numbered)
-    for i in range(count_row):
-        Button(scrollable_frame, text=list_incidents_numbered[i],
-               command=lambda j=i: menu_causal_relationship_information(j, info)).grid(column=0, row=i + 1, sticky='w')
+    if kmeans_group:
+        Button(head, text=print_on_language(1, 77), command=regen_sorted_list).grid(column=0, row=2)
+        count_row = len(sorted_list)
+        count = 0
+        for i in range(count_row):
+            for j in range(len(sorted_list[i])):
+                Button(scrollable_frame, text=sorted_list[i][j][0] + ' ' + sorted_list[i][j][2],
+                       command=lambda k=i: menu_causal_relationship_information(k, info)).grid(column=0, row=count + 1,
+                                                                                               sticky='w')
+                count = count + 1
+            Label(scrollable_frame).grid(column=0, row=count + 1)
+            count = count + 1
+    else:
+        count_row = len(list_incidents_numbered)
+        for i in range(count_row):
+            Button(scrollable_frame, text=list_incidents_numbered[i],
+                   command=lambda k=i: menu_causal_relationship_information(k, info)).grid(column=0, row=i + 1,
+                                                                                           sticky='w')
     back_button(0, count_row + 1)
     exit_button(1, count_row + 1)
+
+
+def regen_sorted_list():
+    global gen_best_variant, sorted_list, kmeans_group
+    gen_best_variant, sorted_list = None, None
+    kmeans_group = True
+    menu_causal_relationship()
+    root.update()
+
+
+def group_by_kmeans():
+    global kmeans_group
+    kmeans_group = not kmeans_group
+    root.update()
+    menu_causal_relationship()
+
+
+def make_cropped_list(example_list):
+    return pandas.DataFrame(example_list).drop([0, 1, 2], axis=1)
 
 
 def menu_causal_relationship_information(user_selection, info):
     clear_window()
     window.pack_forget()
+    head.pack(side='top')
     if is_debug:
         print(debug.i(), 'The causal relationship menu about student is open')
     active_scroll()
@@ -440,11 +517,43 @@ def menu_settings():
     clear_window()
     if is_debug:
         print(debug.i(), 'The settings are open')
-    Button(window, text=print_on_language(1, 32), command=menu_settings_dataset).grid(column=0, row=0)
-    Button(window, text=print_on_language(1, 20), command=lambda: menu_language(True)).grid(column=0, row=1)
-    Button(window, text=print_on_language(1, 43), command=menu_about_program).grid(column=0, row=2)
+    window.columnconfigure(0, minsize=140)
+    width = max([len(print_on_language(1, 32)), len(print_on_language(1, 82)), len(print_on_language(1, 20)),
+                 len(print_on_language(1, 43))])
+    Button(window, text=print_on_language(1, 32), command=menu_settings_dataset, width=width).grid(column=0, row=0,
+                                                                                                   sticky='w')
+    if beta_settings:
+        Button(window, text=print_on_language(1, 82), command=menu_settings_causal_rel_mode, width=width)\
+            .grid(column=0, row=1, sticky='w')
+    Button(window, text=print_on_language(1, 20), command=lambda: menu_language(True), width=width)\
+        .grid(column=0, row=2, sticky='w')
+    Button(window, text=print_on_language(1, 43), command=menu_about_program, width=width)\
+        .grid(column=0, row=3, sticky='w')
+    Label(window, text=print_on_language(1, 83)).grid(column=0, row=4, sticky='w')
+    v = StringVar()
+    Button(window, textvariable=v, command=lambda: active_beta_settings(v)).grid(column=0, row=4, sticky='e')
+    if beta_settings:
+        v.set(print_on_language(1, 80))
+    else:
+        v.set(print_on_language(1, 81))
     back_button(0, 1)
     exit_button(1, 1)
+
+
+def active_beta_settings(text):
+    global beta_settings
+    if beta_settings:
+        beta_settings = False
+        change_configuration('beta_settings', indexes[9], str(0))
+        text.set(print_on_language(1, 81))
+    else:
+        beta_settings = True
+        change_configuration('beta_settings', indexes[9], str(1))
+        text.set(print_on_language(1, 80))
+    if debug:
+        print(debug.i(), 'Beta settings:', beta_settings)
+    root.update()
+    menu_settings()
 
 
 def menu_settings_dataset(buttons=True):
@@ -584,6 +693,61 @@ def short_filename(file_path):
         return str(None)
 
 
+def menu_settings_causal_rel_mode():
+    clear_window()
+    v = StringVar()
+    Label(window, text='KMeans', background='#DCDCDC').grid(column=0, row=0, sticky='w')
+    Label(window, text=print_on_language(1, 78)).grid(column=0, row=1)
+    Button(window, textvariable=v, command=lambda: active_auto_number_clusters(v, entries)).grid(column=1, row=1)
+    entries = []
+    if auto_number_clusters:
+        v.set(print_on_language(1, 80))
+        back_button(0, 2, back_command=menu_settings)
+        exit_button(1, 2)
+    else:
+        v.set(print_on_language(1, 81))
+        current_v = StringVar(root, value=calculations.read_from_configuration(11))
+        Label(window, text=print_on_language(1, 79)).grid(column=0, row=2, sticky='w')
+        value_entry = Entry(window, textvariable=current_v, width=9)
+        entries.append(value_entry)
+        value_entry.grid(column=1, row=2)
+        back_button(0, 2, back_command=lambda: apply_clusters(entries))
+        exit_button(1, 2, exit_command=lambda: apply_clusters(entries, v_exit=True))
+
+
+def apply_clusters(entries, v_exit=False, action=1):
+    global configuration
+    if len(entries) == 0:
+        return
+    elif entries[0].get().isdigit() and 2 <= int(str(entries[0].get())) <= 15:
+        change_configuration('num_clusters', indexes[11], str(entries[0].get()))
+        update_configuration()
+        if action:
+            if v_exit:
+                exit('I Exiting')
+            else:
+                menu_settings()
+    else:
+        messagebox.showerror(print_on_language(1, 41), print_on_language(1, 84))
+
+
+def active_auto_number_clusters(text, entries):
+    apply_clusters(entries, action=0)
+    global auto_number_clusters
+    if auto_number_clusters:
+        auto_number_clusters = False
+        change_configuration('auto_number_clusters', indexes[10], str(0))
+        text.set(print_on_language(1, 80))
+    else:
+        auto_number_clusters = True
+        change_configuration('auto_number_clusters', indexes[10], str(1))
+        text.set(print_on_language(1, 81))
+    if debug:
+        print(debug.i(), 'auto number clusters:', auto_number_clusters)
+    root.update()
+    menu_settings_causal_rel_mode()
+
+
 def menu_language(back_btn=None, delayed_start_var=False):
     clear_window()
     files = os.listdir(os.getcwd() + '/languages')
@@ -701,6 +865,11 @@ status_scroll = 'disabled'
 button_frame = Frame(root)
 button_frame.pack(side="bottom")
 count_click_ee = 0
+beta_settings = bool(int(calculations.read_from_configuration(9)))
+auto_number_clusters = bool(int(calculations.read_from_configuration(10)))
+gen_best_variant = None
+sorted_list = None
+kmeans_group = False
 
 if len(delayed_start) != 0:
     root.title('Causal relationships in school, ' + version)

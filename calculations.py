@@ -1,7 +1,6 @@
 import print_data
 import numpy
 import os
-from sklearn.datasets import load_iris
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 
@@ -29,25 +28,29 @@ def read_from_configuration(n):
                                      str(configuration[indexes[n]]).rfind("'")]
 
 
-def kmeans_test(list_incidents, columns):
-    iris = list_incidents
-    X = columns
-
+def auto_kmeans_clusters(list_incidents):
+    data = list_incidents
+    best_n_clusters = 2
     sil_score_max = -1  # this is the minimum possible score
-
-    for n_clusters in range(2, 10):
-        model = KMeans(n_clusters=n_clusters, init='k-means++', max_iter=100, n_init=1)
-        labels = model.fit_predict(X)
-        sil_score = silhouette_score(X, labels)
-        print("The average silhouette score for %i clusters is %0.2f" % (n_clusters, sil_score))
+    n = 15 if len(list_incidents) > 15 else len(list_incidents)
+    for n_clusters in range(2, n):
+        model = KMeans(n_clusters=n_clusters, init='k-means++', n_init='auto')
+        labels = model.fit_predict(data)
+        sil_score = silhouette_score(data, labels)
         if sil_score > sil_score_max:
             sil_score_max = sil_score
             best_n_clusters = n_clusters
-    kmeans = KMeans(n_clusters=best_n_clusters)
-    kmeans.fit(columns)
-    labels = kmeans.predict(columns)
-    print(list_incidents)
-    print(labels)
+    return best_n_clusters
+
+
+def sort_by_kmeans_clusters(full_list_incidents, list_incidents, num_clusters):
+    kmeans = KMeans(n_clusters=num_clusters, n_init='auto')
+    kmeans.fit(list_incidents)
+    labels = kmeans.predict(list_incidents)
+    sorted_array = []
+    for i in range(max(labels) + 1):
+        sorted_array.append([full_list_incidents[j] for j in range(len(full_list_incidents)) if labels[j] == i])
+    return sorted_array
 
 
 def check_parameters():
@@ -55,7 +58,8 @@ def check_parameters():
     parameters_dataset = ['name', 'sex', 'parallel', 'letter', 'causes', 'time_causes', 'previous_causes']
     parameters_strings = ['language']
     parameters_path = ['dataset_path']
-    errors = []
+    parameters_other = ['num_clusters']
+    errors, resets = [], []
     for i in range(len(supported_parameters)):
         example_parameter_name = supported_parameters[i]
         example_parameter_value = read_from_configuration(i)
@@ -67,13 +71,17 @@ def check_parameters():
             errors.append('Parameter "' + example_parameter_name + '" has an incorrect value! It should be string.')
         if example_parameter_name in parameters_path and not os.path.exists(example_parameter_value):
             errors.append('Parameter "' + example_parameter_name + '" has an incorrect path.')
-    return errors
+        if example_parameter_name in parameters_other and (not example_parameter_value.isdigit() or
+                                                           not (2 <= int(example_parameter_value) <= 15)):
+            resets.append(example_parameter_name)
+    return errors, resets
 
 
 def check_configuration(only_dataset=False, only_indexes=False):
     global indexes, supported_parameters
     supported_parameters = ['language', 'name', 'sex', 'parallel', 'letter', 'causes',
-                            'time_causes', 'previous_causes', 'dataset_path']
+                            'time_causes', 'previous_causes', 'dataset_path', 'beta_settings',
+                            'auto_number_clusters', 'num_clusters']
     indexes = [numpy.nan] * len(supported_parameters)
     warnings = []
     missing_parameters = []
@@ -107,7 +115,8 @@ def make_list_incidents(data, name, sex, parallel, letter, causes, time_causes, 
         if causes[i] != 0:
             school_class = str(parallel[i]) + ' "' + str(letter[i]) + '"'
             example_list_incidents.append(
-                [name[i], sex[i], school_class, time_causes[i], previous_causes[i]])
+                [name[i], sex[i], school_class, time_causes[i], previous_causes[i], parallel[i],
+                 parallel[i] + ord(letter[i])])
     return example_list_incidents
 
 
