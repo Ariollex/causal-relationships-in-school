@@ -421,8 +421,9 @@ def menu_causal_relationship():
         for i in range(count_row):
             for j in range(len(sorted_list[i])):
                 Button(scrollable_frame, text=sorted_list[i][j][0] + ' ' + sorted_list[i][j][2],
-                       command=lambda k=i: menu_causal_relationship_information(k, info)).grid(column=0, row=count + 1,
-                                                                                               sticky='w')
+                       command=lambda k=list_incidents.index(sorted_list[i][j]):
+                       menu_causal_relationship_information(k, info, show_number=False))\
+                    .grid(column=0, row=count + 1, sticky='w')
                 count = count + 1
             Label(scrollable_frame).grid(column=0, row=count + 1)
             count = count + 1
@@ -455,7 +456,7 @@ def make_cropped_list(example_list):
     return pandas.DataFrame(example_list).drop([0, 1, 2], axis=1)
 
 
-def menu_causal_relationship_information(user_selection, info):
+def menu_causal_relationship_information(user_selection, info, show_number=True):
     clear_window()
     window.pack_forget()
     head.pack(side='top')
@@ -463,12 +464,14 @@ def menu_causal_relationship_information(user_selection, info):
         print(debug.i(), 'The causal relationship menu about student is open')
     active_scroll()
     scrollable_frame.grid_columnconfigure(0, weight=1, minsize=300)
-    if list_incidents[user_selection][1] == print_on_language(1, 4) or (print_on_language(3, 2) == 0):
-        user_choice_text = print_on_language(1, 2) + ' ' + str(user_selection + 1) + '. ' + print_on_language(2, 2) + \
-                           ': ' + str(list_incidents[user_selection][0])
+    if show_number:
+        user_choice_text =  print_on_language(1, 2) + ' ' + str(user_selection + 1) + '. '
     else:
-        user_choice_text = print_on_language(1, 2) + ' ' + str(user_selection + 1) + '. ' + print_on_language(3, 2) + \
-                           ': ' + str(list_incidents[user_selection][0])
+        user_choice_text = ''
+    if list_incidents[user_selection][1] == print_on_language(1, 4) or (print_on_language(3, 2) == 0):
+        user_choice_text = user_choice_text + print_on_language(2, 2) + ': ' + str(list_incidents[user_selection][0])
+    else:
+        user_choice_text = user_choice_text + print_on_language(3, 2) + ': ' + str(list_incidents[user_selection][0])
     Label(head, text=user_choice_text).grid(column=0, row=0, sticky='w')
     Label(scrollable_frame, text=print_on_language(1, 65), background='#DCDCDC').grid(column=0, row=1, sticky='w')
 
