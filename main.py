@@ -496,6 +496,8 @@ def menu_charts():
     clear_window()
     if is_debug:
         print(debug.i(), 'The charts menu is open')
+    width = max([len(print_on_language(1, 5)), len(print_on_language(1, 18)), len(print_on_language(1, 19)),
+                 len(print_on_language(1, 56))])
     list_graphs_numbered = print_data.print_selection_list(available_charts)
     Label(window, text=print_on_language(1, 10) + ':')
     count_row = len(list_graphs_numbered)
@@ -503,8 +505,8 @@ def menu_charts():
         if i == 3:
             if len(parallel.value_counts().values) < 7 or len(previous_causes.value_counts().values) < 7:
                 continue
-        Button(window, text=list_graphs_numbered[i], command=lambda j=i: mode_chart_process(j)) \
-            .grid(column=0, row=i + 1, sticky=W)
+        Button(window, text=list_graphs_numbered[i], command=lambda j=i: mode_chart_process(j), width=width,
+               anchor='w').grid(column=0, row=i + 1, sticky=W)
     back_button(0, count_row + 1)
     exit_button(1, count_row + 1)
 
