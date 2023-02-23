@@ -722,12 +722,13 @@ def menu_settings_causal_rel_mode():
 
 
 def apply_clusters(entries, v_exit=False, action=1):
-    global configuration
+    global configuration, sorted_list
     if len(entries) == 0:
         return
     elif entries[0].get().isdigit() and 2 <= int(str(entries[0].get())) <= 15:
         change_configuration('num_clusters', indexes[11], str(entries[0].get()))
         update_configuration()
+        sorted_list = None
         if action:
             if v_exit:
                 exit('I Exiting')
