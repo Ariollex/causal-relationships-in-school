@@ -420,14 +420,16 @@ def menu_causal_relationship():
         count_row = len(sorted_list)
         count = 0
         for i in range(count_row):
+            Label(scrollable_frame, text=print_on_language(1, 85) + ' ' + str(i + 1), background='#DCDCDC')\
+                .grid(column=0, row=count, sticky='w')
             for j in range(len(sorted_list[i])):
+                count = count + 1
                 Button(scrollable_frame, text=sorted_list[i][j][0] + ' ' + sorted_list[i][j][2],
                        command=lambda k=list_incidents.index(sorted_list[i][j]):
                        menu_causal_relationship_information(k, info, show_number=False))\
-                    .grid(column=0, row=count + 1, sticky='w')
-                count = count + 1
-            Label(scrollable_frame).grid(column=0, row=count + 1)
-            count = count + 1
+                    .grid(column=0, row=count, sticky='w')
+            Label(scrollable_frame).grid(row=count + 1)
+            count = count + 2
     else:
         count_row = len(list_incidents_numbered)
         for i in range(count_row):
