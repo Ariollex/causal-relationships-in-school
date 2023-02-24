@@ -374,6 +374,27 @@ def create_exit_button(translated=True, exit_command=lambda: exit(debug.i() + ' 
     exit_btn.pack(padx=5, pady=5, side='right')
 
 
+def create_faq_button(x, y, radius, section_text, description_text):
+    faq_frame.pack(anchor='ne')
+    canvas_element = Canvas(faq_frame, width=25, height=25)
+    faq_button = canvas_element.create_oval(x - radius, y - radius, x + radius, y + radius, fill='#DCDCDC')
+    question_mark = canvas_element.create_text(x, y, text="?", fill='black')
+    canvas_element.tag_bind(faq_button, "<Button-1>", lambda e: on_faq_button_click(e, section_text, description_text))
+    canvas_element.tag_bind(question_mark, "<Button-1>", lambda e: on_faq_button_click(e, section_text,
+                                                                                       description_text))
+    canvas_element.pack()
+
+
+def on_faq_button_click(event, section_text, description_text):
+    clear_window()
+    if debug:
+        print(debug.i(), 'Clicked on FAQ button, event:', event)
+    Label(window, text='FAQ: ' + section_text, background='#DCDCDC').pack()
+    Label(window, text=description_text).pack()
+    create_back_button()
+    create_exit_button()
+
+
 def menu_main():
     clear_window()
     root.update()
@@ -756,28 +777,10 @@ def active_auto_number_clusters(text, entries):
     menu_settings_causal_rel_mode()
 
 
-def create_faq_button(x, y, radius):
-    faq_frame.pack(anchor='ne')
-    canvas_element = Canvas(faq_frame, width=25, height=25)
-    faq_button = canvas_element.create_oval(x - radius, y - radius, x + radius, y + radius, fill='#DCDCDC')
-    question_mark = canvas_element.create_text(x, y, text="?", fill='black')
-    canvas_element.tag_bind(faq_button, "<Button-1>", on_faq_button_click)
-    canvas_element.tag_bind(question_mark, "<Button-1>", on_faq_button_click)
-    canvas_element.pack()
-
-
-def on_faq_button_click(event):
-    clear_window()
-    Label(window, text='FAQ: Languages', background='#DCDCDC').pack()
-    Label(window, text='Language text').pack()
-    create_back_button()
-    create_exit_button()
-
-
 def menu_language(back_btn=None, delayed_start_var=False):
     clear_window()
     window.pack_forget()
-    create_faq_button(x=15, y=15, radius=10)
+    create_faq_button(x=15, y=15, radius=10, section_text='Language', description_text='language TEXT')
     window.pack(expand=True)
     window.grid_columnconfigure(0, weight=1)
     window.grid_propagate(False)
