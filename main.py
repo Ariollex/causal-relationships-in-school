@@ -347,11 +347,11 @@ def clear_window(message=None):
         print(debug.i(), 'Clearing the screen')
     if status_scroll == 'active':
         disable_scroll()
-    for widget in button_frame.winfo_children() + head.winfo_children() + window.winfo_children() + faq_frame\
+    for widget in button_frame.winfo_children() + head.winfo_children() + window.winfo_children() + faq_button_frame\
             .winfo_children():
         widget.destroy()
     head.pack_forget()
-    faq_frame.pack_forget()
+    faq_button_frame.pack_forget()
     window.grid_propagate(True)
     window.pack(expand=True)
     if message is not None:
@@ -375,8 +375,8 @@ def create_exit_button(translated=True, exit_command=lambda: exit(debug.i() + ' 
 
 
 def create_faq_button(x, y, radius, section_text, description_text):
-    faq_frame.pack(anchor='ne')
-    canvas_element = Canvas(faq_frame, width=25, height=25)
+    faq_button_frame.pack(anchor='ne')
+    canvas_element = Canvas(faq_button_frame, width=25, height=25)
     faq_button = canvas_element.create_oval(x - radius, y - radius, x + radius, y + radius, fill='#DCDCDC')
     question_mark = canvas_element.create_text(x, y, text="?", fill='black')
     canvas_element.tag_bind(faq_button, "<Button-1>", lambda e: on_faq_button_click(e, section_text, description_text))
@@ -386,13 +386,25 @@ def create_faq_button(x, y, radius, section_text, description_text):
 
 
 def on_faq_button_click(event, section_text, description_text):
-    clear_window()
+    faq_frame = Frame(root)
+    faq_button_frame.pack_forget()
+    window.pack_forget()
+    button_frame.pack_forget()
+    faq_frame.pack(expand=True)
     if debug:
         print(debug.i(), 'Clicked on FAQ button, event:', event)
-    Label(window, text='FAQ: ' + section_text, background='#DCDCDC').pack()
-    Label(window, text=description_text).pack()
-    create_back_button()
-    create_exit_button()
+    Label(faq_frame, text='FAQ: ' + section_text, background='#DCDCDC', wraplength=200).pack()
+    Label(faq_frame, text=description_text, wraplength=500).pack()
+    Button(faq_frame, text='OK', command=lambda: on_close_faq(faq_frame)).pack(side='bottom', pady=5, anchor='s')
+
+
+def on_close_faq(faq_frame):
+    if debug:
+        print(debug.i(), 'Closing FAQ menu..')
+    faq_frame.pack_forget()
+    faq_button_frame.pack(anchor='ne')
+    button_frame.pack(side='bottom')
+    window.pack(expand=True)
 
 
 def menu_main():
@@ -780,7 +792,10 @@ def active_auto_number_clusters(text, entries):
 def menu_language(back_btn=None, delayed_start_var=False):
     clear_window()
     window.pack_forget()
-    create_faq_button(x=15, y=15, radius=10, section_text='Language', description_text='language TEXT')
+    faq_text = 'This section allows you to change the program language. Please note that the language of the dataset ' \
+               'will not be changed. All data, including column names in the dataset will remain in the language in ' \
+               'which they were written.\nNote: this section is not specifically translated into other languages.'
+    create_faq_button(x=15, y=15, radius=10, section_text='Language', description_text=faq_text)
     window.pack(expand=True)
     window.grid_columnconfigure(0, weight=1)
     window.grid_propagate(False)
@@ -897,7 +912,7 @@ window.pack(expand=True)
 container, canvas, v_scrollbar, h_scrollbar, scrollable_frame, canvas_frame = \
     Frame(), Canvas(), Scrollbar(), Scrollbar(), Frame(), int()
 status_scroll = 'disabled'
-faq_frame = Frame(root)
+faq_button_frame = Frame(root)
 button_frame = Frame(root)
 button_frame.pack(side='bottom')
 count_click_ee = 0
