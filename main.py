@@ -358,7 +358,7 @@ def clear_window(message=None):
         Label(window, text=message, fg='red').grid(column=0, row=0)
 
 
-def back_button(column_btn, count_row, translated=True, back_command=lambda: menu_main()):
+def create_back_button(translated=True, back_command=lambda: menu_main()):
     if not translated:
         exit_btn = Button(button_frame, text='Back', command=back_command)
     else:
@@ -366,8 +366,7 @@ def back_button(column_btn, count_row, translated=True, back_command=lambda: men
     exit_btn.pack(padx=5, pady=5, side='left')
 
 
-def exit_button(column_btn, count_row, translated=True, exit_command=lambda: exit(debug.i() + ' Exiting...' if is_debug
-                                                                                  else '')):
+def create_exit_button(translated=True, exit_command=lambda: exit(debug.i() + ' Exiting...' if is_debug else '')):
     if not translated:
         exit_btn = Button(button_frame, text='Exit', command=exit_command)
     else:
@@ -387,7 +386,7 @@ def menu_main():
     Button(window, text=modes[0], command=menu_causal_relationship, width=width).grid(column=0, row=1)
     Button(window, text=modes[1], command=menu_charts, width=width).grid(column=0, row=2)
     Button(window, text=print_on_language(1, 31), command=menu_settings, width=width).grid(column=0, row=3)
-    exit_button(0, 4)
+    create_exit_button()
 
 
 def menu_causal_relationship():
@@ -439,8 +438,8 @@ def menu_causal_relationship():
             Button(scrollable_frame, text=list_incidents_numbered[i],
                    command=lambda k=i: menu_causal_relationship_information(k, info)).grid(column=0, row=i + 1,
                                                                                            sticky='w')
-    back_button(0, count_row + 1)
-    exit_button(1, count_row + 1)
+    create_back_button()
+    create_exit_button()
 
 
 def regen_sorted_list():
@@ -491,8 +490,8 @@ def menu_causal_relationship_information(user_selection, info, show_number=True)
     ttk.Separator(scrollable_frame, orient='horizontal').grid(column=0, row=3, columnspan=4, sticky='we')
     Label(scrollable_frame, text=print_on_language(1, 66), background='#DCDCDC').grid(column=0, row=4, sticky='w')
     Label(scrollable_frame, text=incident_text).grid(column=0, row=5)
-    back_button(0, 4, back_command=menu_causal_relationship)
-    exit_button(1, 4)
+    create_back_button(back_command=menu_causal_relationship)
+    create_exit_button()
 
 
 def menu_charts():
@@ -510,8 +509,8 @@ def menu_charts():
                 continue
         Button(window, text=list_graphs_numbered[i], command=lambda j=i: mode_chart_process(j), width=width,
                anchor='w').grid(column=0, row=i + 1, sticky=W)
-    back_button(0, count_row + 1)
-    exit_button(1, count_row + 1)
+    create_back_button()
+    create_exit_button()
 
 
 def mode_chart_process(choice_chart):
@@ -519,9 +518,10 @@ def mode_chart_process(choice_chart):
         print(debug.i(), 'Displaying a chart...')
     charts.set_variables(list_incidents, causes, parallel, name_columns, previous_causes)
     charts.chart_selection(choice_chart, data)
+    # TODO: Drop it
     count_row = len(available_charts)
-    back_button(0, count_row + 1)
-    exit_button(1, count_row + 1)
+    create_back_button()
+    create_exit_button()
 
 
 def menu_settings():
@@ -547,8 +547,8 @@ def menu_settings():
         v.set(print_on_language(1, 80))
     else:
         v.set(print_on_language(1, 81))
-    back_button(0, 1)
-    exit_button(1, 1)
+    create_back_button()
+    create_exit_button()
 
 
 def active_beta_settings(text):
@@ -605,8 +605,8 @@ def menu_settings_dataset(buttons=True):
         Button(button_frame, text=print_on_language(1, 50),
                command=lambda: apply_dataset(entries, delayed_start_var=True)).grid(column=0, row=count_row + 1)
     else:
-        back_button(0, count_row + 1, back_command=lambda: apply_dataset(entries))
-    exit_button(1, count_row + 1, exit_command=lambda: apply_dataset(entries, apply_exit=True))
+        create_back_button(back_command=lambda: apply_dataset(entries))
+    create_exit_button(exit_command=lambda: apply_dataset(entries, apply_exit=True))
 
 
 def apply_dataset(changes, delayed_start_var=False, apply_exit=None):
@@ -713,8 +713,8 @@ def menu_settings_causal_rel_mode():
     entries = []
     if auto_number_clusters:
         v.set(print_on_language(1, 80))
-        back_button(0, 2, back_command=menu_settings)
-        exit_button(1, 2)
+        create_back_button(back_command=menu_settings)
+        create_exit_button()
     else:
         v.set(print_on_language(1, 81))
         current_v = StringVar(root, value=calculations.read_from_configuration(11))
@@ -722,8 +722,8 @@ def menu_settings_causal_rel_mode():
         value_entry = Entry(window, textvariable=current_v, width=9)
         entries.append(value_entry)
         value_entry.grid(column=1, row=2)
-        back_button(0, 2, back_command=lambda: apply_clusters(entries))
-        exit_button(1, 2, exit_command=lambda: apply_clusters(entries, v_exit=True))
+        create_back_button(back_command=lambda: apply_clusters(entries))
+        create_exit_button(exit_command=lambda: apply_clusters(entries, v_exit=True))
 
 
 def apply_clusters(entries, v_exit=False, action=1):
@@ -772,10 +772,10 @@ def create_faq_button(x, y, radius):
 
 def on_faq_button_click(event):
     clear_window()
-    Label(window, text='FAQ: Languages').pack()
+    Label(window, text='FAQ: Languages', background='#DCDCDC').pack()
     Label(window, text='Language text').pack()
-    back_button(0, 0)
-    exit_button(0, 1)
+    create_back_button()
+    create_exit_button()
 
 
 def menu_language(back_btn=None, delayed_start_var=False):
@@ -803,13 +803,11 @@ def menu_language(back_btn=None, delayed_start_var=False):
                    command=lambda j=i: change_language_process(files, j, delayed_start_var)) \
                 .grid(column=0, row=count_row)
             count_row = count_row + 1
-    column_btn = 0
     translated = False
     if back_btn:
-        back_button(column_btn, count_row + 2, back_command=menu_settings)
-        column_btn = column_btn + 1
+        create_back_button(back_command=menu_settings)
         translated = True
-    exit_button(column_btn, count_row + 2, translated)
+    create_exit_button(translated)
 
 
 def change_language_process(files, index_language, delayed_start_var=False):
@@ -837,8 +835,8 @@ def menu_about_program():
     Button(window, text=print_on_language(1, 46) + ': ' + 'https://github.com/Ariollex/causal-relationships-in-school',
            command=lambda: open_link('https://github.com/Ariollex/causal-relationships-in-school')) \
         .grid(column=0, row=3)
-    back_button(0, 1, back_command=menu_settings)
-    exit_button(1, 1)
+    create_back_button(back_command=menu_settings)
+    create_exit_button()
 
 
 def check_updates():
