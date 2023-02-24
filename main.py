@@ -84,10 +84,10 @@ def update_configuration():
 
 
 def change_configuration(option, line, argument):
-    lines = open("configuration", 'r').readlines()
+    lines = open(os.getcwd() + '/configuration', 'r').readlines()
     lines[line] = option + " = '" + argument + "'\n"
     try:
-        out = open("configuration", 'w')
+        out = open(os.getcwd() + '/configuration', 'w')
         out.writelines(lines)
         out.close()
     except PermissionError:
@@ -663,7 +663,7 @@ def apply_dataset(changes, delayed_start_var=False, apply_exit=None):
         return
     else:
         global list_incidents, name, sex, parallel, letter, causes, time_causes, previous_causes, configuration
-        configuration = open("configuration", 'r').read().split('\n')
+        configuration = open(os.getcwd() + '/configuration', 'r').read().split('\n')
         calculations.set_variables(configuration)
         set_dataset_columns()
         # Convert time
