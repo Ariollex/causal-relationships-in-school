@@ -812,7 +812,10 @@ def menu_language(back_btn=None, delayed_start_var=False):
 def change_language_process(files, index_language, delayed_start_var=False):
     global language_status, delayed_start, language
     new_language = files[index_language].replace('strings_', '').replace('.xlsx', '')
-    set_language(new_language)
+    try:
+        set_language(new_language)
+    except PermissionError:
+        messagebox.showwarning(print_on_language(1, 41), print_on_language(1, 74))
     language_status = 'active'
     if delayed_start_var:
         delayed_start.remove('invalid_language')
