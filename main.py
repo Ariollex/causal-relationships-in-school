@@ -518,10 +518,6 @@ def mode_chart_process(choice_chart):
         print(debug.i(), 'Displaying a chart...')
     charts.set_variables(list_incidents, causes, parallel, name_columns, previous_causes)
     charts.chart_selection(choice_chart, data)
-    # TODO: Drop it
-    count_row = len(available_charts)
-    create_back_button()
-    create_exit_button()
 
 
 def menu_settings():
