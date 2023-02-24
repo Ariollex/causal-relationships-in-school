@@ -347,9 +347,12 @@ def clear_window(message=None):
         print(debug.i(), 'Clearing the screen')
     if status_scroll == 'active':
         disable_scroll()
-    for widget in button_frame.winfo_children() + head.winfo_children() + window.winfo_children():
+    for widget in button_frame.winfo_children() + head.winfo_children() + window.winfo_children() + faq_frame\
+            .winfo_children():
         widget.destroy()
     head.pack_forget()
+    faq_frame.pack_forget()
+    window.grid_propagate(True)
     window.pack(expand=True)
     if message is not None:
         Label(window, text=message, fg='red').grid(column=0, row=0)
@@ -360,7 +363,7 @@ def back_button(column_btn, count_row, translated=True, back_command=lambda: men
         exit_btn = Button(button_frame, text='Back', command=back_command)
     else:
         exit_btn = Button(button_frame, text=print_on_language(1, 30), command=back_command)
-    exit_btn.grid(column=column_btn, row=count_row, padx=5, pady=5)
+    exit_btn.pack(padx=5, pady=5, side='left')
 
 
 def exit_button(column_btn, count_row, translated=True, exit_command=lambda: exit(debug.i() + ' Exiting...' if is_debug
@@ -369,7 +372,7 @@ def exit_button(column_btn, count_row, translated=True, exit_command=lambda: exi
         exit_btn = Button(button_frame, text='Exit', command=exit_command)
     else:
         exit_btn = Button(button_frame, text=print_on_language(1, 21), command=exit_command)
-    exit_btn.grid(column=column_btn, row=count_row, padx=5, pady=5)
+    exit_btn.pack(padx=5, pady=5, side='right')
 
 
 def menu_main():
@@ -420,13 +423,13 @@ def menu_causal_relationship():
         count_row = len(sorted_list)
         count = 0
         for i in range(count_row):
-            Label(scrollable_frame, text=print_on_language(1, 85) + ' ' + str(i + 1), background='#DCDCDC')\
+            Label(scrollable_frame, text=print_on_language(1, 85) + ' ' + str(i + 1), background='#DCDCDC') \
                 .grid(column=0, row=count, sticky='w')
             for j in range(len(sorted_list[i])):
                 count = count + 1
                 Button(scrollable_frame, text=sorted_list[i][j][0] + ' ' + sorted_list[i][j][2],
                        command=lambda k=list_incidents.index(sorted_list[i][j]):
-                       menu_causal_relationship_information(k, info, show_number=False))\
+                       menu_causal_relationship_information(k, info, show_number=False)) \
                     .grid(column=0, row=count, sticky='w')
             Label(scrollable_frame).grid(row=count + 1)
             count = count + 2
@@ -531,11 +534,11 @@ def menu_settings():
     Button(window, text=print_on_language(1, 32), command=menu_settings_dataset, width=width).grid(column=0, row=0,
                                                                                                    sticky='w')
     if beta_settings:
-        Button(window, text=print_on_language(1, 82), command=menu_settings_causal_rel_mode, width=width)\
+        Button(window, text=print_on_language(1, 82), command=menu_settings_causal_rel_mode, width=width) \
             .grid(column=0, row=1, sticky='w')
-    Button(window, text=print_on_language(1, 20), command=lambda: menu_language(True), width=width)\
+    Button(window, text=print_on_language(1, 20), command=lambda: menu_language(True), width=width) \
         .grid(column=0, row=2, sticky='w')
-    Button(window, text=print_on_language(1, 43), command=menu_about_program, width=width)\
+    Button(window, text=print_on_language(1, 43), command=menu_about_program, width=width) \
         .grid(column=0, row=3, sticky='w')
     Label(window, text=print_on_language(1, 83)).grid(column=0, row=4, sticky='w')
     v = StringVar()
@@ -757,8 +760,31 @@ def active_auto_number_clusters(text, entries):
     menu_settings_causal_rel_mode()
 
 
+def create_faq_button(x, y, radius):
+    faq_frame.pack(anchor='ne')
+    canvas_element = Canvas(faq_frame, width=25, height=25)
+    faq_button = canvas_element.create_oval(x - radius, y - radius, x + radius, y + radius, fill='#DCDCDC')
+    question_mark = canvas_element.create_text(x, y, text="?", fill='black')
+    canvas_element.tag_bind(faq_button, "<Button-1>", on_faq_button_click)
+    canvas_element.tag_bind(question_mark, "<Button-1>", on_faq_button_click)
+    canvas_element.pack()
+
+
+def on_faq_button_click(event):
+    clear_window()
+    Label(window, text='FAQ: Languages').pack()
+    Label(window, text='Language text').pack()
+    back_button(0, 0)
+    exit_button(0, 1)
+
+
 def menu_language(back_btn=None, delayed_start_var=False):
     clear_window()
+    window.pack_forget()
+    create_faq_button(x=15, y=15, radius=10)
+    window.pack(expand=True)
+    window.grid_columnconfigure(0, weight=1)
+    window.grid_propagate(False)
     files = os.listdir(os.getcwd() + '/languages')
     if is_debug:
         print(debug.i(), 'The language menu are open')
@@ -871,8 +897,9 @@ window.pack(expand=True)
 container, canvas, v_scrollbar, h_scrollbar, scrollable_frame, canvas_frame = \
     Frame(), Canvas(), Scrollbar(), Scrollbar(), Frame(), int()
 status_scroll = 'disabled'
+faq_frame = Frame(root)
 button_frame = Frame(root)
-button_frame.pack(side="bottom")
+button_frame.pack(side='bottom')
 count_click_ee = 0
 beta_settings = bool(int(calculations.read_from_configuration(9)))
 auto_number_clusters = bool(int(calculations.read_from_configuration(10)))

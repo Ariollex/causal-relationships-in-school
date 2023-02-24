@@ -17,6 +17,7 @@ def set_language(language):
                    str(configuration[indexes[0]]).find("'") + 1:str(configuration[indexes[0]]).rfind("'")]:
         lines = open("configuration", 'r').readlines()
         lines[indexes[0]] = "language = '" + str(language) + "'\n"
+        # TODO: fix Permission denied: 'configuration'
         out = open("configuration", 'w')
         out.writelines(lines)
         out.close()
