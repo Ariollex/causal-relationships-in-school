@@ -29,6 +29,12 @@ if prefix == '':
 else:
     version = 'v' + version + '-' + prefix + ('-debug' if is_debug else '')
 
+# Supported languages
+supported_languages = {
+    'ru-RU': 'Русский',
+    'en-US': 'English'
+}
+
 # Disable warnings
 pandas.options.mode.chained_assignment = None
 
@@ -813,9 +819,9 @@ def menu_language(back_btn=None, delayed_start_var=False):
                     text = ' (' + print_on_language(1, 57) + ')'
             else:
                 text = ''
-            Button(window, text=files[i].replace('strings_', '').replace('.xlsx', '') + text,
+            Button(window, text=supported_languages[files[i].replace('strings_', '').replace('.xlsx', '')] + text,
                    command=lambda j=i: change_language_process(files, j, delayed_start_var)) \
-                .grid(column=0, row=count_row)
+                .grid(column=0, row=count_row, sticky='nsew')
             count_row = count_row + 1
     translated = False
     if back_btn:
