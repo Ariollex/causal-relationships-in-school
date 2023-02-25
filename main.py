@@ -456,7 +456,7 @@ def menu_causal_relationship():
         Button(head, text=v, command=group_by_kmeans).grid(column=0, row=1, sticky='e')
     active_scroll()
     scrollable_frame.grid_columnconfigure(0, weight=1)
-    if kmeans_group:
+    if kmeans_group and beta_settings:
         Button(head, text=print_on_language(1, 77), command=regen_sorted_list).grid(column=0, row=2)
         count_row = len(sorted_list)
         count = 0
