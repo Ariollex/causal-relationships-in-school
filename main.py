@@ -809,7 +809,8 @@ def menu_language(back_btn=None, delayed_start_var=False):
     create_faq_button(x=15, y=15, radius=10, section_text='Language', description_text=faq_text)
     window.pack(expand=True)
     window.grid_columnconfigure(0, weight=1)
-    window.grid_propagate(False)
+    if not delayed_start_var:
+        window.grid_propagate(False)
     files = os.listdir(os.getcwd() + '/languages')
     if is_debug:
         print(debug.i(), 'The language menu are open')
