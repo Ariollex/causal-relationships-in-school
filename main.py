@@ -35,6 +35,9 @@ supported_languages = {
     'en-US': 'English'
 }
 
+# Path
+base_path = os.path.dirname(os.path.abspath(__file__))
+
 # Disable warnings
 pandas.options.mode.chained_assignment = None
 
@@ -46,7 +49,7 @@ if is_debug:
     print(debug.i(), 'Starting... \n' + debug.i(), 'Version:', version, 'with debug.')
 
 # Configuration
-if not os.path.exists(os.getcwd() + '/configuration'):
+if not os.path.exists(os.path.join(base_path, 'configuration')):
     if prefix == '':
         url_configuration = \
             'https://raw.githubusercontent.com/Ariollex/causal-relationships-in-school/main/configuration'
@@ -57,14 +60,14 @@ if not os.path.exists(os.getcwd() + '/configuration'):
         print(debug.w(), 'Missing configuration file! Trying to get a file from', url_configuration)
     messagebox.showwarning('Warning!', 'The configuration file was not found.\nDownloading from ' + url_configuration)
     response = requests.get(url_configuration, timeout=None)
-    with open(os.getcwd() + '/configuration', "wb") as file:
+    with open(os.path.join(base_path, 'configuration'), "wb") as file:
         file.write(response.content)
     if is_debug:
         print(debug.s(), 'Configuration has been successfully restored.')
 
 if is_debug:
     print(debug.i(), 'Opening configuration...')
-configuration = open(os.getcwd() + '/configuration', 'r').read().split('\n')
+configuration = open(os.path.join(base_path, 'configuration'), 'r').read().split('\n')
 calculations.set_variables(configuration)
 indexes, warnings, missing_parameters = calculations.check_configuration()
 if len(warnings) != 0:
@@ -79,15 +82,15 @@ set_variables(configuration, indexes)
 
 def update_configuration():
     global configuration
-    configuration = open(os.getcwd() + '/configuration', 'r').read().split('\n')
+    configuration = open(os.path.join(base_path, 'configuration'), 'r').read().split('\n')
     calculations.set_variables(configuration)
 
 
 def change_configuration(option, line, argument):
-    lines = open(os.getcwd() + '/configuration', 'r').readlines()
+    lines = open(os.path.join(base_path, 'configuration'), 'r').readlines()
     lines[line] = option + " = '" + argument + "'\n"
     try:
-        out = open(os.getcwd() + '/configuration', 'w')
+        out = open(os.path.join(base_path, 'configuration'), 'w')
         out.writelines(lines)
         out.close()
     except PermissionError:
@@ -138,7 +141,7 @@ if not os.path.exists(os.getcwd() + '/languages') or not os.listdir(os.getcwd() 
         zip_file.extractall('languages')
     os.remove(archive)
     set_language(str(None))
-    calculations.set_variables(open(os.getcwd() + '/configuration', 'r').read().split('\n'))
+    calculations.set_variables(open(os.path.join(base_path, 'configuration')).read().split('\n'))
     if is_debug:
         print(debug.s(), 'Languages has been successfully restored.')
 
@@ -664,7 +667,7 @@ def apply_dataset(changes, delayed_start_var=False, apply_exit=None):
         return
     else:
         global list_incidents, name, sex, parallel, letter, causes, time_causes, previous_causes, configuration
-        configuration = open(os.getcwd() + '/configuration', 'r').read().split('\n')
+        configuration = open(os.path.join(base_path, 'configuration'), 'r').read().split('\n')
         calculations.set_variables(configuration)
         set_dataset_columns()
         # Convert time
