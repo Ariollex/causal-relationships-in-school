@@ -645,7 +645,7 @@ def menu_settings_dataset(buttons=True):
         count_row = count_row + 1
     if not buttons:
         Button(button_frame, text=print_on_language(1, 50),
-               command=lambda: apply_dataset(entries, delayed_start_var=True)).grid(column=0, row=count_row + 1)
+               command=lambda: apply_dataset(entries, delayed_start_var=True)).pack(side='left')
     else:
         create_back_button(back_command=lambda: apply_dataset(entries))
     create_exit_button(exit_command=lambda: apply_dataset(entries, apply_exit=True))
