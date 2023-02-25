@@ -35,8 +35,11 @@ supported_languages = {
     'en-US': 'English'
 }
 
-# Path
+# Base path
 base_path = os.path.dirname(os.path.abspath(__file__))
+
+# Configuration path
+configuration_path = os.path.join(base_path, 'configuration')
 
 # Disable warnings
 pandas.options.mode.chained_assignment = None
@@ -49,7 +52,7 @@ if is_debug:
     print(debug.i(), 'Starting... \n' + debug.i(), 'Version:', version, 'with debug.')
 
 # Configuration
-if not os.path.exists(os.path.join(base_path, 'configuration')):
+if not os.path.exists(configuration_path):
     if prefix == '':
         url_configuration = \
             'https://raw.githubusercontent.com/Ariollex/causal-relationships-in-school/main/configuration'
@@ -60,14 +63,15 @@ if not os.path.exists(os.path.join(base_path, 'configuration')):
         print(debug.w(), 'Missing configuration file! Trying to get a file from', url_configuration)
     messagebox.showwarning('Warning!', 'The configuration file was not found.\nDownloading from ' + url_configuration)
     response = requests.get(url_configuration, timeout=None)
-    with open(os.path.join(base_path, 'configuration'), "wb") as file:
+    with open(configuration_path, "wb") as file:
         file.write(response.content)
     if is_debug:
         print(debug.s(), 'Configuration has been successfully restored.')
 
 if is_debug:
     print(debug.i(), 'Opening configuration...')
-configuration = open(os.path.join(base_path, 'configuration'), 'r').read().split('\n')
+os.chmod(configuration_path, 0o777)
+configuration = open(configuration_path, 'r').read().split('\n')
 calculations.set_variables(configuration)
 indexes, warnings, missing_parameters = calculations.check_configuration()
 if len(warnings) != 0:
@@ -77,17 +81,17 @@ if len(missing_parameters) != 0:
     error.error('These required parameters are not defined:', 0)
     print(*['- ' + missing_parameters[i] for i in range(len(missing_parameters))], sep='\n')
     error.broken_configuration()
-set_variables(configuration, indexes)
+set_variables(configuration, configuration_path, indexes)
 
 
 def update_configuration():
     global configuration
-    configuration = open(os.path.join(base_path, 'configuration'), 'r').read().split('\n')
+    configuration = open(configuration_path, 'r').read().split('\n')
     calculations.set_variables(configuration)
 
 
 def change_configuration(option, line, argument):
-    lines = open(os.path.join(base_path, 'configuration'), 'r').readlines()
+    lines = open(configuration_path, 'r').readlines()
     lines[line] = option + " = '" + argument + "'\n"
     try:
         out = open(os.path.join(base_path, 'configuration'), 'w')
@@ -141,7 +145,7 @@ if not os.path.exists(os.getcwd() + '/languages') or not os.listdir(os.getcwd() 
         zip_file.extractall('languages')
     os.remove(archive)
     set_language(str(None))
-    calculations.set_variables(open(os.path.join(base_path, 'configuration')).read().split('\n'))
+    update_configuration()
     if is_debug:
         print(debug.s(), 'Languages has been successfully restored.')
 
@@ -667,8 +671,7 @@ def apply_dataset(changes, delayed_start_var=False, apply_exit=None):
         return
     else:
         global list_incidents, name, sex, parallel, letter, causes, time_causes, previous_causes, configuration
-        configuration = open(os.path.join(base_path, 'configuration'), 'r').read().split('\n')
-        calculations.set_variables(configuration)
+        update_configuration()
         set_dataset_columns()
         # Convert time
         for i in range(data.shape[0]):
