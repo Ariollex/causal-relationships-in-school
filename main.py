@@ -39,7 +39,7 @@ supported_languages = {
 base_path = os.path.dirname(os.path.abspath(__file__))
 
 # Configuration path
-configuration_path = os.path.join(base_path, 'configuration')
+configuration_path = os.getcwd() + '/configuration'
 
 # Disable warnings
 pandas.options.mode.chained_assignment = None
@@ -88,13 +88,14 @@ def update_configuration():
     global configuration
     configuration = open(configuration_path, 'r').read().split('\n')
     calculations.set_variables(configuration)
+    set_variables(configuration, configuration_path, indexes)
 
 
 def change_configuration(option, line, argument):
     lines = open(configuration_path, 'r').readlines()
     lines[line] = option + " = '" + argument + "'\n"
     try:
-        out = open(os.path.join(base_path, 'configuration'), 'w')
+        out = open(configuration_path, 'w')
         out.writelines(lines)
         out.close()
     except PermissionError:
