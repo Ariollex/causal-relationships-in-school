@@ -645,6 +645,7 @@ def menu_settings_dataset(buttons=True):
 
 
 def apply_dataset(changes, delayed_start_var=False, apply_exit=None):
+    global sorted_list, gen_best_variant
     if file_loc is None:
         if apply_exit:
             exit()
@@ -682,6 +683,7 @@ def apply_dataset(changes, delayed_start_var=False, apply_exit=None):
         # Re-creating a list of incidents
         list_incidents = calculations.make_list_incidents(data, name, sex, parallel, letter, causes,
                                                           time_causes, previous_causes)
+        sorted_list, gen_best_variant = None, None
     if apply_exit:
         exit(debug.i() + ' Exiting...' if is_debug else '')
     elif not delayed_start_var:

@@ -116,7 +116,7 @@ def make_list_incidents(data, name, sex, parallel, letter, causes, time_causes, 
             school_class = str(parallel[i]) + ' "' + str(letter[i]) + '"'
             example_list_incidents.append(
                 [name[i], sex[i], school_class, time_causes[i], previous_causes[i], parallel[i],
-                 parallel[i] + ord(letter[i])])
+                 int(parallel[i]) + int(ord(letter[i]))])
     return example_list_incidents
 
 
