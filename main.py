@@ -950,4 +950,5 @@ else:
     if is_debug:
         print(debug.i(), 'Applying constants...')
     apply_constants()
+root.pack_propagate(False)
 root.mainloop()
