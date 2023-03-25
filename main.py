@@ -18,25 +18,24 @@ import debug
 import calculations
 import print_data
 import charts
+import updater
 from strings import set_language, set_variables, print_on_language
 
 # Version
-version = '0.3'
+version = '0.3.0'
 prefix = 'alpha'
 is_debug = True
 if prefix == '':
     version = 'v' + version
 else:
     version = 'v' + version + '-' + prefix + ('-debug' if is_debug else '')
+updater.set_variables(is_debug)
 
 # Supported languages
 supported_languages = {
     'ru-RU': 'Русский',
     'en-US': 'English'
 }
-
-# Base path
-base_path = os.path.dirname(os.path.abspath(__file__))
 
 # Configuration path
 configuration_path = os.getcwd() + '/configuration'
@@ -139,7 +138,7 @@ if not os.path.exists(os.getcwd() + '/languages') or not os.listdir(os.getcwd() 
         print(debug.w(), 'Missing language file! Trying to get a file from', url_languages)
     messagebox.showwarning('Warning!', 'The language files was not found.\nDownloading from ' + url_languages)
     response = requests.get(url_languages, timeout=None)
-    with open(os.getcwd() + '/languages-' + version, "wb") as file:
+    with open(os.getcwd() + '/languages-' + version, 'wb') as file:
         file.write(response.content)
     archive = os.getcwd() + '/languages-' + version
     with zipfile.ZipFile(archive, 'r') as zip_file:
@@ -252,7 +251,7 @@ def open_link(link):
 
 
 def get_int(text):
-    return int(''.join([s for s in text.split() if s.isdigit()]))
+    return int(''.join([s for s in text if s.isdigit()]))
 
 
 def fix_configuration():
@@ -859,7 +858,7 @@ def menu_about_program():
     if is_debug:
         print(debug.i(), 'The "About program" menu is open')
     Label(window, text=print_on_language(1, 15)).grid(column=0, row=0)
-    Button(window, text=print_on_language(1, 44) + ': ' + version,
+    Button(window, text=print_on_language(1, 44) + ': ' + version + ' (Click to check updates)',
            command=check_updates) \
         .grid(column=0, row=1)
     Button(window, text=print_on_language(1, 45) + ': Artem Agapkin',
@@ -883,7 +882,9 @@ def check_updates():
             print(debug.i(), 'Server response received...')
         response_data = json.loads(latest_response.text or latest_response.content)
         latest_version = response_data['tag_name']
-        if latest_version <= version:
+        if is_debug:
+            print(debug.i(), 'Latest version:', latest_version)
+        if get_int(latest_version) <= get_int(version):
             count_click_ee = count_click_ee + 1
             if is_debug:
                 print(debug.i(), 'The latest update is already installed!')
@@ -892,11 +893,19 @@ def check_updates():
                 easter_egg()
             else:
                 messagebox.showinfo(print_on_language(1, 73), print_on_language(1, 69))
-        elif get_int(latest_version) > get_int(version):
+        else:
             if is_debug:
                 print(debug.i(), 'Update available!')
-            messagebox.showinfo(print_on_language(1, 73), print_on_language(1, 72) +
-                                'https://github.com/Ariollex/causal-relationships-in-school/releases/latest')
+            if updater.supported_os == -1:
+                if is_debug:
+                    # TODO: Translate
+                    print(debug.i(), 'Updater unsupported due to unsupported OS')
+                messagebox.showinfo(print_on_language(1, 73), print_on_language(1, 72) +
+                                    ' https://github.com/Ariollex/causal-relationships-in-school/releases/latest')
+            else:
+                if messagebox.askyesno(print_on_language(1, 73), 'Update available.' +
+                                       '\nDownload and install?'):
+                    updater.start_update(latest_version)
     else:
         if is_debug:
             print(debug.e(), 'Update check error!')
