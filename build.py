@@ -15,13 +15,13 @@ def make_archive(source, destination):
 
 
 # Make new languages.zip
-if os.path.exists('languages/languages.zip'):
-    os.remove('languages/languages.zip')
-make_archive('languages/', 'languages/languages.zip')
+if os.path.exists(os.getcwd() + '/languages/languages.zip'):
+    os.remove(os.getcwd() + '/languages/languages.zip')
+make_archive(os.getcwd() + '/languages', os.getcwd() + '/languages/languages.zip')
 
 # Removing dist
-if os.path.exists('dist'):
-    shutil.rmtree('dist')
+if os.path.exists(os.getcwd() + '/dist'):
+    shutil.rmtree(os.getcwd() + '/dist')
 
 # Build app
 PyInstaller.__main__.run([

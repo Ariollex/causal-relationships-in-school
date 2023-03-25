@@ -1,4 +1,3 @@
-from sys import exit
 import pandas
 import numpy
 import platform
@@ -11,6 +10,7 @@ import requests
 import random
 import zipfile
 import json
+import sys
 import os
 
 import error
@@ -29,7 +29,6 @@ if prefix == '':
     version = 'v' + version
 else:
     version = 'v' + version + '-' + prefix + ('-debug' if is_debug else '')
-updater.set_variables(is_debug)
 
 # Supported languages
 supported_languages = {
@@ -37,8 +36,23 @@ supported_languages = {
     'en-US': 'English'
 }
 
+# Base path
+if platform.system() == 'Darwin':
+    if getattr(sys, 'frozen', False):
+        base_path = os.path.abspath(sys.executable)
+        for _ in range(4):
+            base_path = base_path[:base_path.rfind('/')]
+    else:
+        base_path = os.path.abspath(__file__)
+else:
+    base_path = os.getcwd()
+
+if is_debug:
+    print(debug.i(), 'base_path set to', base_path)
+updater.set_variables(is_debug, base_path)
+
 # Configuration path
-configuration_path = os.getcwd() + '/configuration'
+configuration_path = base_path + '/configuration'
 
 # Disable warnings
 pandas.options.mode.chained_assignment = None
@@ -80,14 +94,14 @@ if len(missing_parameters) != 0:
     error.error('These required parameters are not defined:', 0)
     print(*['- ' + missing_parameters[i] for i in range(len(missing_parameters))], sep='\n')
     error.broken_configuration()
-set_variables(configuration, configuration_path, indexes)
+set_variables(configuration, configuration_path, indexes, base_path)
 
 
 def update_configuration():
     global configuration
     configuration = open(configuration_path, 'r').read().split('\n')
     calculations.set_variables(configuration)
-    set_variables(configuration, configuration_path, indexes)
+    set_variables(configuration, configuration_path, indexes, base_path)
 
 
 def change_configuration(option, line, argument):
@@ -126,7 +140,7 @@ if len(resets) > 0:
     reset_variables(resets)
 
 # Language
-if not os.path.exists(os.getcwd() + '/languages') or not os.listdir(os.getcwd() + '/languages'):
+if not os.path.exists(base_path + '/languages') or not os.listdir(base_path + '/languages'):
     global language
     if prefix == '':
         url_languages = \
@@ -138,16 +152,16 @@ if not os.path.exists(os.getcwd() + '/languages') or not os.listdir(os.getcwd() 
         print(debug.w(), 'Missing language file! Trying to get a file from', url_languages)
     messagebox.showwarning('Warning!', 'The language files was not found.\nDownloading from ' + url_languages)
     response = requests.get(url_languages, timeout=None)
-    with open(os.getcwd() + '/languages-' + version, 'wb') as file:
+    with open(base_path + '/languages-' + version, 'wb') as file:
         file.write(response.content)
-    archive = os.getcwd() + '/languages-' + version
+    archive = base_path + '/languages-' + version
     with zipfile.ZipFile(archive, 'r') as zip_file:
-        zip_file.extractall('languages')
+        zip_file.extractall(base_path + '/languages')
     os.remove(archive)
     set_language(str(None))
     update_configuration()
     if is_debug:
-        print(debug.s(), 'Languages has been successfully restored.')
+        print(debug.s(), 'Languages has been successfully restored in', base_path + '/languages')
 
 language = calculations.read_from_configuration(0)
 if not set_language(language):
@@ -379,7 +393,7 @@ def create_back_button(translated=True, back_command=lambda: menu_main()):
     exit_btn.pack(padx=5, pady=5, side='left')
 
 
-def create_exit_button(translated=True, exit_command=lambda: exit(debug.i() + ' Exiting...' if is_debug else '')):
+def create_exit_button(translated=True, exit_command=lambda: sys.exit(debug.i() + ' Exiting...' if is_debug else '')):
     if not translated:
         exit_btn = Button(button_frame, text='Exit', command=exit_command)
     else:
@@ -655,7 +669,7 @@ def apply_dataset(changes, delayed_start_var=False, apply_exit=None):
     global sorted_list, gen_best_variant
     if file_loc is None:
         if apply_exit:
-            exit()
+            sys.exit()
         else:
             messagebox.showerror(print_on_language(1, 41), print_on_language(1, 55))
         return
@@ -691,7 +705,7 @@ def apply_dataset(changes, delayed_start_var=False, apply_exit=None):
                                                           time_causes, previous_causes)
         sorted_list, gen_best_variant = None, None
     if apply_exit:
-        exit(debug.i() + ' Exiting...' if is_debug else '')
+        sys.exit(debug.i() + ' Exiting...' if is_debug else '')
     elif not delayed_start_var:
         menu_settings()
     else:
@@ -779,7 +793,7 @@ def apply_clusters(entries, v_exit=False, action=1):
         sorted_list = None
         if action:
             if v_exit:
-                exit('I Exiting')
+                sys.exit('I Exiting')
             else:
                 menu_settings()
     else:
@@ -814,9 +828,9 @@ def menu_language(back_btn=None, delayed_start_var=False):
     window.grid_columnconfigure(0, weight=1)
     if not delayed_start_var:
         window.grid_propagate(False)
-    files = os.listdir(os.getcwd() + '/languages')
+    files = os.listdir(base_path + '/languages')
     if is_debug:
-        print(debug.i(), 'The language menu are open')
+        print(debug.i(), 'The language menu are open. Files in /languages:', files)
     Label(window, text='Available languages:').grid(column=0, row=0)
     count_row = 1
     for i in range(len(files)):
@@ -842,10 +856,11 @@ def menu_language(back_btn=None, delayed_start_var=False):
 def change_language_process(files, index_language, delayed_start_var=False):
     global language_status, delayed_start, language
     new_language = files[index_language].replace('strings_', '').replace('.xlsx', '')
-    try:
-        set_language(new_language)
-    except PermissionError:
-        messagebox.showwarning(print_on_language(1, 41), print_on_language(1, 74))
+    # try:
+    #     set_language(new_language)
+    # except PermissionError:
+    #     messagebox.showwarning(print_on_language(1, 41), print_on_language(1, 74))
+    set_language(new_language)
     language_status = 'active'
     if delayed_start_var:
         delayed_start.remove('invalid_language')
@@ -884,7 +899,7 @@ def check_updates():
         latest_version = response_data['tag_name']
         if is_debug:
             print(debug.i(), 'Latest version:', latest_version)
-        if get_int(latest_version) <= get_int(version):
+        if get_int(latest_version) <= get_int(version) and False:
             count_click_ee = count_click_ee + 1
             if is_debug:
                 print(debug.i(), 'The latest update is already installed!')
