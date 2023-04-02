@@ -144,10 +144,10 @@ if not os.path.exists(base_path + '/languages') or not os.listdir(base_path + '/
     global language
     if prefix == '':
         url_languages = \
-            'https://raw.githubusercontent.com/Ariollex/causal-relationships-in-school/main/languages/languages.zip'
+            'https://raw.githubusercontent.com/Ariollex/causal-relationships-in-school/main/languages.zip'
     else:
         url_languages = \
-            'https://raw.githubusercontent.com/Ariollex/causal-relationships-in-school/dev/languages/languages.zip'
+            'https://raw.githubusercontent.com/Ariollex/causal-relationships-in-school/dev/languages.zip'
     if is_debug:
         print(debug.w(), 'Missing language file! Trying to get a file from', url_languages)
     messagebox.showwarning('Warning!', 'The language files was not found.\nDownloading from ' + url_languages)
