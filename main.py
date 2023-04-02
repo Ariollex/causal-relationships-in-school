@@ -902,7 +902,7 @@ def check_updates():
         latest_version = response_data['tag_name']
         if is_debug:
             print(debug.i(), 'Latest version:', latest_version)
-        if get_int(latest_version) <= get_int(version) and False:
+        if get_int(latest_version) <= get_int(version) and (False if is_debug else True):
             count_click_ee = count_click_ee + 1
             if is_debug:
                 print(debug.i(), 'The latest update is already installed!')
