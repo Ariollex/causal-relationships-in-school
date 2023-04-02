@@ -19,10 +19,10 @@ import calculations
 import print_data
 import charts
 import updater
+from version import version
 from strings import set_language, set_variables, print_on_language
 
 # Version
-version = '0.3.0'
 prefix = 'alpha'
 is_debug = True
 if prefix == '':
@@ -144,10 +144,10 @@ if not os.path.exists(base_path + '/languages') or not os.listdir(base_path + '/
     global language
     if prefix == '':
         url_languages = \
-            'https://raw.githubusercontent.com/Ariollex/causal-relationships-in-school/main/languages.zip'
+            'https://github.com/Ariollex/causal-relationships-in-school/raw/main/languages.zip'
     else:
         url_languages = \
-            'https://raw.githubusercontent.com/Ariollex/causal-relationships-in-school/dev/languages.zip'
+            'https://github.com/Ariollex/causal-relationships-in-school/raw/dev/languages.zip'
     if is_debug:
         print(debug.w(), 'Missing language file! Trying to get a file from', url_languages)
     messagebox.showwarning('Warning!', 'The language files was not found.\nDownloading from ' + url_languages)
