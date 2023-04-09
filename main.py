@@ -37,13 +37,10 @@ supported_languages = {
 }
 
 # Base path
-if platform.system() == 'Darwin':
-    if getattr(sys, 'frozen', False):
-        base_path = os.path.abspath(sys.executable)
-        for _ in range(4):
-            base_path = base_path[:base_path.rfind('/')]
-    else:
-        base_path = os.path.abspath(__file__)
+if platform.system() == 'Darwin' and getattr(sys, 'frozen', False):
+    base_path = os.path.abspath(sys.executable)
+    for _ in range(4):
+        base_path = base_path[:base_path.rfind('/')]
 else:
     base_path = os.getcwd()
 
