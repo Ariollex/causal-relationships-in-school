@@ -895,7 +895,7 @@ def check_updates():
     latest_response = requests.get(url)
     if is_debug:
         print(debug.i(), 'Checking for updates...')
-    if latest_response.status_code == 200:
+    if latest_response.status_code == 200 and os.path.exists(base_path + '/Updater.app'):
         if is_debug:
             print(debug.i(), 'Server response received...')
         response_data = json.loads(latest_response.text or latest_response.content)

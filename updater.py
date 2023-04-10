@@ -1,3 +1,4 @@
+from tkinter import messagebox
 import subprocess
 import requests
 import platform
@@ -48,7 +49,6 @@ def generate_file_name(latest_version):
 def start_update(latest_version):
     if is_debug:
         print(debug.i(), 'Starting update...')
-    update_updater()
     file_name = generate_file_name(latest_version)
     # Start Updater
     start_updater(latest_version, file_name)
@@ -88,36 +88,3 @@ def get_version_updater():
         ms = info['FileVersionMS']
         ls = info['FileVersionLS']
         return f"{win32api.HIWORD(ms)}.{win32api.LOWORD(ms)}.{win32api.HIWORD(ls)}.{win32api.LOWORD(ls)}"
-
-
-def update_updater():
-    url = 'https://api.github.com/repos/ariollex/Updater/releases/latest'
-    latest_response = requests.get(url)
-    if is_debug:
-        print(debug.i(), 'Checking updates for Updater...')
-    if latest_response.status_code == 200:
-        if is_debug:
-            print(debug.i(), 'Server response received...')
-        response_data = json.loads(latest_response.text or latest_response.content)
-        latest_version = response_data['tag_name']
-        if is_debug:
-            print(debug.i(), 'Latest Updater version on server:', latest_version)
-        if get_version_updater == -1 or get_int(latest_version) > get_int(get_version_updater()):
-            if os.path.exists(base_path + '/' + updater_name):
-                if is_debug:
-                    print(debug.i(), 'Update available for Updater!')
-                os.remove(updater_name)
-            else:
-                if is_debug:
-                    print(debug.i(), 'Updater not found! Downloading latest version to', base_path + '/' + updater_name)
-            url = 'https://github.com/Ariollex/Updater/releases/download/' + latest_version + '/' + updater_name
-            response = requests.get(url, timeout=None)
-            with open(base_path + '/' + updater_name, "wb") as file:
-                file.write(response.content)
-            return 0
-        else:
-            if is_debug:
-                print(debug.i(), 'The latest update of Updater is already installed!')
-            return 0
-    else:
-        return -1
