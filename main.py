@@ -245,6 +245,7 @@ def apply_constants(open_main_menu=True):
                                      print_on_language(1, 40)]
 
     root.title(print_on_language(1, 15) + ', ' + version)
+    root.createcommand('tk::mac::ShowPreferences', menu_settings)
 
     if configuration_status == 'normal':
         # Creating a list of incidents
