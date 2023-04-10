@@ -23,7 +23,7 @@ if platform.system() == 'Windows':
     # Make version file for exe
     pyinstaller_versionfile.create_versionfile(
         output_file="version_file.txt",
-        version=version,
+        version=version + '.0',
         file_description=app_description,
         internal_name=app_name,
         original_filename=app_name + ".exe",
