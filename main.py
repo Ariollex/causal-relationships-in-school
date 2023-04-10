@@ -571,7 +571,7 @@ def menu_charts():
             if len(parallel.value_counts().values) < 7 or len(previous_causes.value_counts().values) < 7:
                 continue
         Button(window, text=list_graphs_numbered[i], command=lambda j=i: mode_chart_process(j), width=width,
-               anchor='w').grid(column=0, row=i + 1, sticky=W)
+               anchor='w', padx=10).grid(column=0, row=i + 1, sticky=W)
     create_back_button()
     create_exit_button()
 
