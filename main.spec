@@ -11,7 +11,7 @@ else:
     onefile = False
 block_cipher = None
 
-app_name = 'Causal_relationships_in_school'
+app_name = 'Causal relationships in school'
 
 #
 # Main spec file elements
