@@ -36,11 +36,14 @@ supported_languages = {
     'en-US': 'English'
 }
 
+root = Tk()
+root.minsize(600, 250)
+root.withdraw()
+
 # Base path
 if platform.system() == 'Darwin' and getattr(sys, 'frozen', False):
-    base_path = os.path.abspath(sys.executable)
-    for _ in range(4):
-        base_path = base_path[:base_path.rfind('/')]
+    base_path = root.tk.call("::tk::mac::GetAppPath")
+    base_path = base_path[:base_path.rfind('/')]
 else:
     base_path = os.getcwd()
 
@@ -944,8 +947,7 @@ def easter_egg():
 
 if is_debug:
     print(debug.i(), 'Creating a window...')
-root = Tk()
-root.minsize(600, 250)
+root.wm_state('normal')
 window = Frame(root)
 head = Frame(root)
 head.pack(side='top')
