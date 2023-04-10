@@ -23,7 +23,7 @@ from version import version
 from strings import set_language, set_variables, print_on_language
 
 # Version
-prefix = 'alpha'
+prefix = 'beta'
 is_debug = True
 if prefix == '':
     version = 'v' + version
