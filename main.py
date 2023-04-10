@@ -163,8 +163,7 @@ if not os.path.exists(base_path + '/languages') or not os.listdir(base_path + '/
     if is_debug:
         print(debug.s(), 'Languages has been successfully restored in', base_path + '/languages')
     if platform.system() == 'Darwin':
-        messagebox.showinfo('Information', 'Languages has been successfully restored.\nPlease restart the program.')
-        sys.exit()
+        root.update()
 
 language = calculations.read_from_configuration(0)
 if not set_language(language):
