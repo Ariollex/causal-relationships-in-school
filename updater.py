@@ -27,16 +27,6 @@ def set_variables(is_debug_main, base_path_main):
     base_path = base_path_main
 
 
-def is_updater_supported():
-    global updater_name
-    if platform.system() not in supported_os:
-        return -1
-
-
-def get_int(text):
-    return int(''.join([s for s in str(text) if s.isdigit()]))
-
-
 def generate_file_name(latest_version):
     file_name = str(latest_version)
     if platform.system() == 'Windows':
@@ -71,20 +61,3 @@ def start_updater(latest_version, file_name):
         print(debug.i(), 'Starting Updater...')
     subprocess.Popen(args)
     sys.exit()
-
-
-def get_version_updater():
-    if not os.path.exists(base_path + '/' + updater_name):
-        return -1
-    elif platform.system() == 'Darwin':
-        import plistlib
-        with open(base_path + '/Updater.app/Contents/Info.plist', 'rb') as fp:
-            pl = plistlib.load(fp)
-        return pl.get("CFBundleShortVersionString")
-    else:
-        import win32api
-        path = r'Updater.exe'
-        info = win32api.GetFileVersionInfo(path, '\\')
-        ms = info['FileVersionMS']
-        ls = info['FileVersionLS']
-        return f"{win32api.HIWORD(ms)}.{win32api.LOWORD(ms)}.{win32api.HIWORD(ls)}.{win32api.LOWORD(ls)}"
