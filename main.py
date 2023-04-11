@@ -916,13 +916,12 @@ def check_updates():
                 print(debug.i(), 'Update available!')
             if updater.supported_os == -1:
                 if is_debug:
-                    # TODO: Translate
                     print(debug.i(), 'Updater unsupported due to unsupported OS')
                 messagebox.showinfo(print_on_language(1, 73), print_on_language(1, 72) +
                                     ' https://github.com/Ariollex/causal-relationships-in-school/releases/latest')
             else:
-                if messagebox.askyesno(print_on_language(1, 73), 'Update available.' +
-                                       '\nDownload and install?'):
+                if messagebox.askyesno(print_on_language(1, 73), print_on_language(1, 72) + '.' +
+                                       '\n' + print_on_language(1, 86)):
                     updater.start_update(latest_version)
     else:
         if is_debug:
