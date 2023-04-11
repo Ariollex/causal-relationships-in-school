@@ -247,13 +247,13 @@ def apply_constants(open_main_menu=True):
                                      print_on_language(1, 40)]
 
     root.title(print_on_language(1, 15) + ', ' + version)
-    root.createcommand('tk::mac::ShowPreferences', menu_settings)
 
     if configuration_status == 'normal':
         # Creating a list of incidents
         list_incidents = calculations.make_list_incidents(data, name, sex, parallel, letter, causes,
                                                           time_causes, previous_causes)
         if open_main_menu:
+            root.createcommand('tk::mac::ShowPreferences', menu_settings)
             menu_main()
         else:
             menu_language(back_btn=True)
