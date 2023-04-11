@@ -943,8 +943,14 @@ def easter_egg():
     messagebox.showinfo("Easter egg", 'Congratulations! \nYou found an Easter egg!\n\n' + random.choice(quotes))
 
 
+def show_help():
+    messagebox.showinfo('help', 'Causal relationships in school, ' + version + '\n\n' + 'Reference:\n' +
+                        'https://github.com/Ariollex/causal-relationships-in-school')
+
+
 if is_debug:
     print(debug.i(), 'Creating a window...')
+root.createcommand('::tk::mac::ShowHelp', show_help)
 root.wm_state('normal')
 window = Frame(root)
 head = Frame(root)
