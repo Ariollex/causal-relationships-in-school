@@ -20,7 +20,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('icons/icon.png', '.')],
     hiddenimports=['sklearn.metrics._pairwise_distances_reduction._datasets_pair',
                    'sklearn.metrics._pairwise_distances_reduction._middle_term_computer',
                    'win32api',
@@ -57,6 +57,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon='icons/icon.ico',
     version='version_file.txt',
 )
 bundle_obj = exe
@@ -77,6 +78,7 @@ if not onefile:
 app = BUNDLE(
     bundle_obj,
     name=app_name + '.app',
+    icon='icons/icon.ico',
     bundle_identifier="app.ariollex.causal_relationships_in_school",
     info_plist={
         'CFBundleShortVersionString': version,

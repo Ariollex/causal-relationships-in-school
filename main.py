@@ -952,6 +952,11 @@ if is_debug:
     print(debug.i(), 'Creating a window...')
 root.createcommand('::tk::mac::ShowHelp', show_help)
 root.wm_state('normal')
+if hasattr(sys, "_MEIPASS"):
+    root.wm_iconphoto(True, Image("photo", file=os.path.dirname(sys._MEIPASS) + '/Resources/icon.png'))
+else:
+    root.wm_iconphoto(True, PhotoImage(file='icons/icon.png'))
+root.iconbitmap(r'icons/icon.png')
 window = Frame(root)
 head = Frame(root)
 head.pack(side='top')
