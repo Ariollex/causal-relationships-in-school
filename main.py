@@ -877,7 +877,7 @@ def menu_about_program():
     if is_debug:
         print(debug.i(), 'The "About program" menu is open')
     Label(window, text=print_on_language(1, 15)).grid(column=0, row=0)
-    Button(window, text=print_on_language(1, 44) + ': ' + version + ' (Click to check updates)',
+    Button(window, text=print_on_language(1, 44) + ': ' + version + ' (' + print_on_language(1, 87) + ')',
            command=check_updates) \
         .grid(column=0, row=1)
     Button(window, text=print_on_language(1, 45) + ': Artem Agapkin',
