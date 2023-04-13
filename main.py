@@ -24,7 +24,7 @@ from strings import set_language, set_variables, print_on_language
 
 # Version
 prefix = 'beta'
-is_debug = True
+is_debug = False
 if prefix == '':
     version = 'v' + version
 else:
@@ -442,7 +442,8 @@ def menu_main():
     root.update()
     if is_debug:
         print(debug.i(), 'The main menu is open')
-    Label(window, text=print_on_language(1, 6) + '. ' + print_on_language(1, 7) + ':').grid(column=0, row=0)
+#   Программа поддерживает несколько режимов работы. Выберите режим:
+#   Label(window, text=print_on_language(1, 6) + '. ' + print_on_language(1, 7) + ':').grid(column=0, row=0)
     width = max([len(modes[0]), len(modes[1]), len(print_on_language(1, 31))])
 
     # Program operation mode selection
