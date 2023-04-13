@@ -421,7 +421,7 @@ def on_faq_button_click(event, section_text, description_text):
     window.pack_forget()
     button_frame.pack_forget()
     faq_frame.pack(expand=True)
-    if debug:
+    if is_debug:
         print(debug.i(), 'Clicked on FAQ button, event:', event)
     Label(faq_frame, text='FAQ: ' + section_text, background='#DCDCDC', wraplength=200).pack()
     Label(faq_frame, text=description_text, wraplength=500).pack()
@@ -429,7 +429,7 @@ def on_faq_button_click(event, section_text, description_text):
 
 
 def on_close_faq(faq_frame):
-    if debug:
+    if is_debug:
         print(debug.i(), 'Closing FAQ menu..')
     faq_frame.pack_forget()
     faq_button_frame.pack(anchor='ne')
@@ -621,7 +621,7 @@ def active_beta_settings(text):
         beta_settings = True
         change_configuration('beta_settings', indexes[9], str(1))
         text.set(print_on_language(1, 80))
-    if debug:
+    if is_debug:
         print(debug.i(), 'Beta settings:', beta_settings)
     root.update()
     menu_settings()
@@ -815,7 +815,7 @@ def active_auto_number_clusters(text, entries):
         auto_number_clusters = True
         change_configuration('auto_number_clusters', indexes[10], str(1))
         text.set(print_on_language(1, 81))
-    if debug:
+    if is_debug:
         print(debug.i(), 'auto number clusters:', auto_number_clusters)
     root.update()
     menu_settings_causal_rel_mode()
