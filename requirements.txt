@@ -9,3 +9,4 @@ setuptools==67.6.1
 scikit-learn==1.2.2
 pyinstaller==5.9.0
 pywin32==306
+dmgbuild==1.6.1

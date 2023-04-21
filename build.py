@@ -16,7 +16,7 @@ if os.path.exists(os.getcwd() + '/dist'):
     shutil.rmtree(os.getcwd() + '/dist')
 
 # Variables
-app_name = "Updater"
+app_name = "Causal relationships in school"
 app_description = "Causal_relationships_in_school"
 
 if platform.system() == 'Windows':
@@ -35,3 +35,17 @@ if platform.system() == 'Windows':
 PyInstaller.__main__.run([
     'main.spec'
 ])
+
+# Make .dmg
+if platform.system() == 'Darwin':
+    import dmgbuild
+
+    # build dmg
+    dmgbuild.build_dmg(
+        filename='dist/' + app_name + '.dmg',
+        volume_name=app_name,
+        settings={
+            'files': ['dist/' + app_name + '.app', 'Updater.app', 'Dataset', 'configuration', 'languages'],
+            'icon': 'icons/icon.png',
+        }
+    )
