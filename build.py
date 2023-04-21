@@ -1,22 +1,51 @@
 # Tools for build
-
+import PyInstaller.__main__
+import pyinstaller_versionfile
+from version import version
+import platform
 import shutil
 import os
 
-# Make languages.zip
+# Make new languages.zip
+if os.path.exists(os.getcwd() + '/languages/languages.zip'):
+    os.remove(os.getcwd() + '/languages/languages.zip')
+shutil.make_archive("languages", 'zip', os.getcwd() + '/languages/')
 
+# Removing dist
+if os.path.exists(os.getcwd() + '/dist'):
+    shutil.rmtree(os.getcwd() + '/dist')
 
-def make_archive(source, destination):
-    base = os.path.basename(destination)
-    name = base.split('.')[0]
-    f_format = base.split('.')[1]
-    archive_from = os.path.dirname(source)
-    archive_to = os.path.basename(source.strip(os.sep))
-    shutil.make_archive(name, f_format, archive_from, archive_to)
-    shutil.move('%s.%s' % (name, f_format), destination)
+# Variables
+app_name = "Causal relationships in school"
+app_description = "Causal_relationships_in_school"
 
+if platform.system() == 'Windows':
+    # Make version file for exe
+    pyinstaller_versionfile.create_versionfile(
+        output_file="version_file.txt",
+        version=version + '.0',
+        file_description=app_description,
+        internal_name=app_name,
+        original_filename=app_name + ".exe",
+        product_name=app_name,
+        translations=[1033, 1252, 1251]
+    )
 
-if os.path.exists('languages/languages.zip'):
-    os.remove('languages/languages.zip')
+# Build application
+PyInstaller.__main__.run([
+    'main.spec'
+])
 
-make_archive('languages/', 'languages/languages.zip')
+# Make .dmg
+if platform.system() == 'Darwin':
+    import dmgbuild
+
+    # build dmg
+    dmgbuild.build_dmg(
+        filename='dist/' + app_name + '.dmg',
+        volume_name=app_name,
+        settings={
+            'files': ['dist/' + app_name + '.app', 'Updater.app', 'Dataset', 'configuration', 'languages'],
+            'icon': 'icons/icon.png',
+        }
+    )

@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
+import matplotlib
 import pandas
 import seaborn as sns
 from strings import print_on_language
 from calculations import read_from_configuration
+matplotlib.use('TkAgg')
 
 list_incidents, causes, parallel, name_columns, language_texts, previous_causes = [], [], [], [], [], []
 
