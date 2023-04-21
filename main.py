@@ -23,7 +23,7 @@ from version import version
 from strings import set_language, set_variables, print_on_language
 
 # Version
-prefix = 'beta'
+prefix = ''
 is_debug = False
 if prefix == '':
     version = 'v' + version
@@ -81,6 +81,7 @@ if not os.path.exists(configuration_path):
     if is_debug:
         print(debug.s(), 'Configuration has been successfully restored.')
 
+# Configuration
 if is_debug:
     print(debug.i(), 'Opening configuration...')
 os.chmod(configuration_path, 0o777)
