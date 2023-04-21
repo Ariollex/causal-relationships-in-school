@@ -955,7 +955,10 @@ if is_debug:
 root.createcommand('::tk::mac::ShowHelp', show_help)
 root.wm_state('normal')
 if hasattr(sys, "_MEIPASS"):
-    root.wm_iconphoto(True, Image("photo", file=os.path.dirname(sys._MEIPASS) + '/Resources/icon.png'))
+    if platform.system() == 'Darwin':
+        root.wm_iconphoto(True, Image("photo", file=os.path.dirname(sys._MEIPASS) + '/Resources/icon.png'))
+    else:
+        root.wm_iconphoto(True, Image("photo", file=sys._MEIPASS + '/icon.png'))
 else:
     root.wm_iconphoto(True, PhotoImage(file='icons/icon.png'))
 window = Frame(root)
